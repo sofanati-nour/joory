@@ -1,0 +1,1290 @@
+[
+    {
+        "id": "minimax/minimax-m2.1",
+        "canonical_slug": "minimax/minimax-m2.1",
+        "hugging_face_id": "MiniMaxAI/MiniMax-M2.1",
+        "name": "MiniMax M2.1",
+        "created": 1766454997,
+        "description": "MiniMax-M2.1 is a lightweight, state-of-the-art large language model optimized for coding, agentic workflows, and modern application development. With only 10 billion activated parameters, it delivers a major jump in real-world capability while maintaining exceptional latency, scalability, and cost efficiency.\n\nCompared to its predecessor, M2.1 delivers cleaner, more concise outputs and faster perceived response times. It shows leading multilingual coding performance across major systems and application languages, achieving 49.4% on Multi-SWE-Bench and 72.5% on SWE-Bench Multilingual, and serves as a versatile agent “brain” for IDEs, coding tools, and general-purpose assistance.\n\nTo avoid degrading this model's performance, MiniMax highly recommends preserving reasoning between turns. Learn more about using reasoning_details to pass back reasoning in our [docs](https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks).",
+        "context_length": 196608,
+        "architecture": {
+            "modality": "text->text",
+            "input_modalities": [
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Other",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00000028",
+            "completion": "0.0000012",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.00000014"
+        },
+        "top_provider": {
+            "context_length": 196608,
+            "max_completion_tokens": null,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": 1,
+            "top_p": 0.9,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "z-ai/glm-4.7",
+        "canonical_slug": "z-ai/glm-4.7-20251222",
+        "hugging_face_id": "zai-org/GLM-4.7",
+        "name": "GLM 4.7",
+        "created": 1766378014,
+        "description": "GLM-4.7 is Z.AI’s latest flagship model, featuring upgrades in two key areas: enhanced programming capabilities and more stable multi-step reasoning/execution. It demonstrates significant improvements in executing complex agent tasks while delivering more natural conversational experiences and superior front-end aesthetics.",
+        "context_length": 202752,
+        "architecture": {
+            "modality": "text->text",
+            "input_modalities": [
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Other",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.0000004",
+            "completion": "0.0000015",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 202752,
+            "max_completion_tokens": 65535,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_a",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": 1,
+            "top_p": 0.95,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "google/gemini-3-flash-preview",
+        "canonical_slug": "google/gemini-3-flash-preview-20251217",
+        "hugging_face_id": "",
+        "name": "Gemini 3 Flash",
+        "created": 1765987078,
+        "description": "Gemini 3 Flash is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance. It delivers near Pro level reasoning and tool use performance with substantially lower latency than larger Gemini variants, making it well suited for interactive development, long running agent loops, and collaborative coding tasks. Compared to Gemini 2.5 Flash, it provides broad quality improvements across reasoning, multimodal understanding, and reliability.\n\nThe model supports a 1M token context window and multimodal inputs including text, images, audio, video, and PDFs, with text output. It includes configurable reasoning via thinking levels (minimal, low, medium, high), structured output, tool use, and automatic context caching. Gemini 3 Flash Preview is optimized for users who want strong reasoning and agentic behavior without the cost or latency of full scale frontier models.",
+        "context_length": 1048576,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "text",
+                "image",
+                "file",
+                "audio",
+                "video"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Gemini",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.0000005",
+            "completion": "0.000003",
+            "request": "0",
+            "image": "0",
+            "audio": "0.000001",
+            "web_search": "0",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.00000005"
+        },
+        "top_provider": {
+            "context_length": 1048576,
+            "max_completion_tokens": 65535,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "openai/gpt-5.2-chat",
+        "canonical_slug": "openai/gpt-5.2-chat-20251211",
+        "hugging_face_id": "",
+        "name": "GPT-5.2 Chat",
+        "created": 1765389783,
+        "description": "GPT-5.2 Chat (AKA Instant) is the fast, lightweight member of the 5.2 family, optimized for low-latency chat while retaining strong general intelligence. It uses adaptive reasoning to selectively “think” on harder queries, improving accuracy on math, coding, and multi-step tasks without slowing down typical conversations. The model is warmer and more conversational by default, with better instruction following and more stable short-form reasoning. GPT-5.2 Chat is designed for high-throughput, interactive workloads where responsiveness and consistency matter more than deep deliberation.",
+        "context_length": 128000,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "file",
+                "image",
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "GPT",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00000175",
+            "completion": "0.000014",
+            "request": "0",
+            "image": "0",
+            "web_search": "0.01",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.000000175"
+        },
+        "top_provider": {
+            "context_length": 128000,
+            "max_completion_tokens": 16384,
+            "is_moderated": true
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "max_tokens",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "tool_choice",
+            "tools"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "openai/gpt-5.2-pro",
+        "canonical_slug": "openai/gpt-5.2-pro-20251211",
+        "hugging_face_id": "",
+        "name": "GPT-5.2 Pro",
+        "created": 1765389780,
+        "description": "GPT-5.2 Pro is OpenAI’s most advanced model, offering major improvements in agentic coding and long context performance over GPT-5 Pro. It is optimized for complex tasks that require step-by-step reasoning, instruction following, and accuracy in high-stakes use cases. It supports test-time routing features and advanced prompt understanding, including user-specified intent like \"think hard about this.\" Improvements include reductions in hallucination, sycophancy, and better performance in coding, writing, and health-related tasks.",
+        "context_length": 400000,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "image",
+                "text",
+                "file"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "GPT",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.000021",
+            "completion": "0.000168",
+            "request": "0",
+            "image": "0",
+            "web_search": "0.01",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 400000,
+            "max_completion_tokens": 128000,
+            "is_moderated": true
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "tool_choice",
+            "tools"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "z-ai/glm-4.6v",
+        "canonical_slug": "z-ai/glm-4.6-20251208",
+        "hugging_face_id": "zai-org/GLM-4.6V",
+        "name": "GLM 4.6V",
+        "created": 1765207462,
+        "description": "GLM-4.6V is a large multimodal model designed for high-fidelity visual understanding and long-context reasoning across images, documents, and mixed media. It supports up to 128K tokens, processes complex page layouts and charts directly as visual inputs, and integrates native multimodal function calling to connect perception with downstream tool execution. The model also enables interleaved image-text generation and UI reconstruction workflows, including screenshot-to-HTML synthesis and iterative visual editing.",
+        "context_length": 131072,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "image",
+                "text",
+                "video"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Other",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.0000003",
+            "completion": "0.0000009",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0",
+            "input_cache_read": "0"
+        },
+        "top_provider": {
+            "context_length": 131072,
+            "max_completion_tokens": 131072,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": 0.8,
+            "top_p": 0.6,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "deepseek/deepseek-v3.2",
+        "canonical_slug": "deepseek/deepseek-v3.2-20251201",
+        "hugging_face_id": "deepseek-ai/DeepSeek-V3.2",
+        "name": "DeepSeek V3.2",
+        "created": 1764594642,
+        "description": "DeepSeek-V3.2 is a large language model designed to harmonize high computational efficiency with strong reasoning and agentic tool-use performance. It introduces DeepSeek Sparse Attention (DSA), a fine-grained sparse attention mechanism that reduces training and inference cost while preserving quality in long-context scenarios. A scalable reinforcement learning post-training framework further improves reasoning, with reported performance in the GPT-5 class, and the model has demonstrated gold-medal results on the 2025 IMO and IOI. V3.2 also uses a large-scale agentic task synthesis pipeline to better integrate reasoning into tool-use settings, boosting compliance and generalization in interactive environments.\n\nUsers can control the reasoning behaviour with the `reasoning` `enabled` boolean. [Learn more in our docs](https://openrouter.ai/docs/use-cases/reasoning-tokens#enable-reasoning-with-default-config)",
+        "context_length": 163840,
+        "architecture": {
+            "modality": "text->text",
+            "input_modalities": [
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "DeepSeek",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00000025",
+            "completion": "0.00000038",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 163840,
+            "max_completion_tokens": 65536,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": 1,
+            "top_p": 0.95,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "anthropic/claude-opus-4.5",
+        "canonical_slug": "anthropic/claude-4.5-opus-20251124",
+        "hugging_face_id": "",
+        "name": "Claude Opus 4.5",
+        "created": 1764010580,
+        "description": "Claude Opus 4.5 is Anthropic’s frontier reasoning model optimized for complex software engineering, agentic workflows, and long-horizon computer use. It offers strong multimodal capabilities, competitive performance across real-world coding and reasoning benchmarks, and improved robustness to prompt injection. The model is designed to operate efficiently across varied effort levels, enabling developers to trade off speed, depth, and token usage depending on task requirements. It comes with a new parameter to control token efficiency, which can be accessed using the OpenRouter Verbosity parameter with low, medium, or high.\n\nOpus 4.5 supports advanced tool use, extended context management, and coordinated multi-agent setups, making it well-suited for autonomous research, debugging, multi-step planning, and spreadsheet/browser manipulation. It delivers substantial gains in structured reasoning, execution reliability, and alignment compared to prior Opus generations, while reducing token overhead and improving performance on long-running tasks.",
+        "context_length": 200000,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "file",
+                "image",
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Claude",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.000005",
+            "completion": "0.000025",
+            "request": "0",
+            "image": "0",
+            "web_search": "0.01",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.0000005",
+            "input_cache_write": "0.00000625"
+        },
+        "top_provider": {
+            "context_length": 200000,
+            "max_completion_tokens": 32000,
+            "is_moderated": true
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "verbosity"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "google/gemini-3-pro-image-preview",
+        "canonical_slug": "google/gemini-3-pro-image-preview-20251120",
+        "hugging_face_id": "",
+        "name": "Nano Banana Pro",
+        "created": 1763653797,
+        "description": "Nano Banana Pro is Google’s most advanced image-generation and editing model, built on Gemini 3 Pro. It extends the original Nano Banana with significantly improved multimodal reasoning, real-world grounding, and high-fidelity visual synthesis. The model generates context-rich graphics, from infographics and diagrams to cinematic composites, and can incorporate real-time information via Search grounding.\n\nIt offers industry-leading text rendering in images (including long passages and multilingual layouts), consistent multi-image blending, and accurate identity preservation across up to five subjects. Nano Banana Pro adds fine-grained creative controls such as localized edits, lighting and focus adjustments, camera transformations, and support for 2K/4K outputs and flexible aspect ratios. It is designed for professional-grade design, product visualization, storyboarding, and complex multi-element compositions while remaining efficient for general image creation workflows.",
+        "context_length": 65536,
+        "architecture": {
+            "modality": "text+image->text+image",
+            "input_modalities": [
+                "image",
+                "text"
+            ],
+            "output_modalities": [
+                "image",
+                "text"
+            ],
+            "tokenizer": "Gemini",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.000002",
+            "completion": "0.000012",
+            "request": "0",
+            "image": "0.067",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 65536,
+            "max_completion_tokens": 32768,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "x-ai/grok-4.1-fast",
+        "canonical_slug": "x-ai/grok-4.1-fast",
+        "hugging_face_id": "",
+        "name": "Grok 4.1 Fast",
+        "created": 1763587502,
+        "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research. 2M context window.\n\nReasoning can be enabled/disabled using the `reasoning` `enabled` parameter in the API. [Learn more in our docs](https://openrouter.ai/docs/use-cases/reasoning-tokens#controlling-reasoning-tokens)",
+        "context_length": 2000000,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "text",
+                "image"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Grok",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.0000002",
+            "completion": "0.0000005",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.00000005"
+        },
+        "top_provider": {
+            "context_length": 2000000,
+            "max_completion_tokens": 30000,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "logprobs",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_logprobs",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "google/gemini-3-pro-preview",
+        "canonical_slug": "google/gemini-3-pro-preview-20251117",
+        "hugging_face_id": "",
+        "name": "Gemini 3 Pro",
+        "created": 1763474668,
+        "description": "Gemini 3 Pro is Google’s flagship frontier model for high-precision multimodal reasoning, combining strong performance across text, image, video, audio, and code with a 1M-token context window. Reasoning Details must be preserved when using multi-turn tool calling, see our docs here: https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks. It delivers state-of-the-art benchmark results in general reasoning, STEM problem solving, factual QA, and multimodal understanding, including leading scores on LMArena, GPQA Diamond, MathArena Apex, MMMU-Pro, and Video-MMMU. Interactions emphasize depth and interpretability: the model is designed to infer intent with minimal prompting and produce direct, insight-focused responses.\n\nBuilt for advanced development and agentic workflows, Gemini 3 Pro provides robust tool-calling, long-horizon planning stability, and strong zero-shot generation for complex UI, visualization, and coding tasks. It excels at agentic coding (SWE-Bench Verified, Terminal-Bench 2.0), multimodal analysis, and structured long-form tasks such as research synthesis, planning, and interactive learning experiences. Suitable applications include autonomous agents, coding assistants, multimodal analytics, scientific reasoning, and high-context information processing.",
+        "context_length": 1048576,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "text",
+                "image",
+                "file",
+                "audio",
+                "video"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Gemini",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.000002",
+            "completion": "0.000012",
+            "request": "0",
+            "image": "0.008256",
+            "web_search": "0",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.0000002",
+            "input_cache_write": "0.000002375"
+        },
+        "top_provider": {
+            "context_length": 1048576,
+            "max_completion_tokens": 65536,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "moonshotai/kimi-k2-thinking",
+        "canonical_slug": "moonshotai/kimi-k2-thinking-20251106",
+        "hugging_face_id": "moonshotai/Kimi-K2-Thinking",
+        "name": "Kimi K2 Thinking",
+        "created": 1762440622,
+        "description": "Kimi K2 Thinking is Moonshot AI’s most advanced open reasoning model to date, extending the K2 series into agentic, long-horizon reasoning. Built on the trillion-parameter Mixture-of-Experts (MoE) architecture introduced in Kimi K2, it activates 32 billion parameters per forward pass and supports 256 k-token context windows. The model is optimized for persistent step-by-step thought, dynamic tool invocation, and complex reasoning workflows that span hundreds of turns. It interleaves step-by-step reasoning with tool use, enabling autonomous research, coding, and writing that can persist for hundreds of sequential actions without drift.\n\nIt sets new open-source benchmarks on HLE, BrowseComp, SWE-Multilingual, and LiveCodeBench, while maintaining stable multi-agent behavior through 200–300 tool calls. Built on a large-scale MoE architecture with MuonClip optimization, it combines strong reasoning depth with high inference efficiency for demanding agentic and analytical tasks.",
+        "context_length": 262144,
+        "architecture": {
+            "modality": "text->text",
+            "input_modalities": [
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Other",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.0000004",
+            "completion": "0.00000175",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 262144,
+            "max_completion_tokens": 65535,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "minimax/minimax-m2",
+        "canonical_slug": "minimax/minimax-m2",
+        "hugging_face_id": "MiniMaxAI/MiniMax-M2",
+        "name": "MiniMax M2",
+        "created": 1761252093,
+        "description": "MiniMax-M2 is a compact, high-efficiency large language model optimized for end-to-end coding and agentic workflows. With 10 billion activated parameters (230 billion total), it delivers near-frontier intelligence across general reasoning, tool use, and multi-step task execution while maintaining low latency and deployment efficiency.\n\nThe model excels in code generation, multi-file editing, compile-run-fix loops, and test-validated repair, showing strong results on SWE-Bench Verified, Multi-SWE-Bench, and Terminal-Bench. It also performs competitively in agentic evaluations such as BrowseComp and GAIA, effectively handling long-horizon planning, retrieval, and recovery from execution errors.\n\nBenchmarked by [Artificial Analysis](https://artificialanalysis.ai/models/minimax-m2), MiniMax-M2 ranks among the top open-source models for composite intelligence, spanning mathematics, science, and instruction-following. Its small activation footprint enables fast inference, high concurrency, and improved unit economics, making it well-suited for large-scale agents, developer assistants, and reasoning-driven applications that require responsiveness and cost efficiency.\n\nTo avoid degrading this model's performance, MiniMax highly recommends preserving reasoning between turns. Learn more about using reasoning_details to pass back reasoning in our [docs](https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks).",
+        "context_length": 196608,
+        "architecture": {
+            "modality": "text->text",
+            "input_modalities": [
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Other",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.0000002",
+            "completion": "0.000001",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.00000003"
+        },
+        "top_provider": {
+            "context_length": 196608,
+            "max_completion_tokens": 65536,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": 1,
+            "top_p": 0.95,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "anthropic/claude-haiku-4.5",
+        "canonical_slug": "anthropic/claude-4.5-haiku-20251001",
+        "hugging_face_id": "",
+        "name": "Claude Haiku 4.5",
+        "created": 1760547638,
+        "description": "Claude Haiku 4.5 is Anthropic’s fastest and most efficient model, delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models. Matching Claude Sonnet 4’s performance across reasoning, coding, and computer-use tasks, Haiku 4.5 brings frontier-level capability to real-time and high-volume applications.\n\nIt introduces extended thinking to the Haiku line; enabling controllable reasoning depth, summarized or interleaved thought output, and tool-assisted workflows with full support for coding, bash, web search, and computer-use tools. Scoring >73% on SWE-bench Verified, Haiku 4.5 ranks among the world’s best coding models while maintaining exceptional responsiveness for sub-agents, parallelized execution, and scaled deployment.",
+        "context_length": 200000,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "image",
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Claude",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.000001",
+            "completion": "0.000005",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.0000001",
+            "input_cache_write": "0.00000125"
+        },
+        "top_provider": {
+            "context_length": 200000,
+            "max_completion_tokens": 64000,
+            "is_moderated": true
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "stop",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "openai/gpt-5-image",
+        "canonical_slug": "openai/gpt-5-image",
+        "hugging_face_id": "",
+        "name": "GPT-5 Image",
+        "created": 1760447986,
+        "description": "[GPT-5](https://openrouter.ai/openai/gpt-5) Image combines OpenAI's GPT-5 model with state-of-the-art image generation capabilities. It offers major improvements in reasoning, code quality, and user experience while incorporating GPT Image 1's superior instruction following, text rendering, and detailed image editing.",
+        "context_length": 400000,
+        "architecture": {
+            "modality": "text+image->text+image",
+            "input_modalities": [
+                "image",
+                "text",
+                "file"
+            ],
+            "output_modalities": [
+                "image",
+                "text"
+            ],
+            "tokenizer": "GPT",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00001",
+            "completion": "0.00001",
+            "request": "0",
+            "image": "0.00001",
+            "web_search": "0.01",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.00000125"
+        },
+        "top_provider": {
+            "context_length": 400000,
+            "max_completion_tokens": 128000,
+            "is_moderated": true
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "presence_penalty",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_logprobs",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "google/gemini-2.5-flash-image",
+        "canonical_slug": "google/gemini-2.5-flash-image",
+        "hugging_face_id": "",
+        "name": "Gemini 2.5 Flash Image (Nano Banana)",
+        "created": 1759870431,
+        "description": "Gemini 2.5 Flash Image, a.k.a. \"Nano Banana,\" is now generally available. It is a state of the art image generation model with contextual understanding. It is capable of image generation, edits, and multi-turn conversations. Aspect ratios can be controlled with the [image_config API Parameter](https://openrouter.ai/docs/features/multimodal/image-generation#image-aspect-ratio-configuration)",
+        "context_length": 32768,
+        "architecture": {
+            "modality": "text+image->text+image",
+            "input_modalities": [
+                "image",
+                "text"
+            ],
+            "output_modalities": [
+                "image",
+                "text"
+            ],
+            "tokenizer": "Gemini",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.0000003",
+            "completion": "0.0000025",
+            "request": "0",
+            "image": "0.001238",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 32768,
+            "max_completion_tokens": 32768,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "max_tokens",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "anthropic/claude-sonnet-4.5",
+        "canonical_slug": "anthropic/claude-4.5-sonnet-20250929",
+        "hugging_face_id": "",
+        "name": "Claude Sonnet 4.5",
+        "created": 1759161676,
+        "description": "Claude Sonnet 4.5 is Anthropic’s most advanced Sonnet model to date, optimized for real-world agents and coding workflows. It delivers state-of-the-art performance on coding benchmarks such as SWE-bench Verified, with improvements across system design, code security, and specification adherence. The model is designed for extended autonomous operation, maintaining task continuity across sessions and providing fact-based progress tracking.\n\nSonnet 4.5 also introduces stronger agentic capabilities, including improved tool orchestration, speculative parallel execution, and more efficient context and memory management. With enhanced context tracking and awareness of token usage across tool calls, it is particularly well-suited for multi-context and long-running workflows. Use cases span software engineering, cybersecurity, financial analysis, research agents, and other domains requiring sustained reasoning and tool use.",
+        "context_length": 1000000,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "text",
+                "image",
+                "file"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Claude",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.000003",
+            "completion": "0.000015",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.0000003",
+            "input_cache_write": "0.00000375"
+        },
+        "top_provider": {
+            "context_length": 1000000,
+            "max_completion_tokens": 64000,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": 1,
+            "top_p": 1,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "moonshotai/kimi-k2-0905",
+        "canonical_slug": "moonshotai/kimi-k2-0905",
+        "hugging_face_id": "moonshotai/Kimi-K2-Instruct-0905",
+        "name": "Kimi K2 0905",
+        "created": 1757021147,
+        "description": "Kimi K2 0905 is the September update of [Kimi K2 0711](moonshotai/kimi-k2). It is a large-scale Mixture-of-Experts (MoE) language model developed by Moonshot AI, featuring 1 trillion total parameters with 32 billion active per forward pass. It supports long-context inference up to 256k tokens, extended from the previous 128k.\n\nThis update improves agentic coding with higher accuracy and better generalization across scaffolds, and enhances frontend coding with more aesthetic and functional outputs for web, 3D, and related tasks. Kimi K2 is optimized for agentic capabilities, including advanced tool use, reasoning, and code synthesis. It excels across coding (LiveCodeBench, SWE-bench), reasoning (ZebraLogic, GPQA), and tool-use (Tau2, AceBench) benchmarks. The model is trained with a novel stack incorporating the MuonClip optimizer for stable large-scale MoE training.",
+        "context_length": 262144,
+        "architecture": {
+            "modality": "text->text",
+            "input_modalities": [
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Other",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00000039",
+            "completion": "0.0000019",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 262144,
+            "max_completion_tokens": 262144,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+        ],
+        "default_parameters": {}
+    },
+    {
+        "id": "openai/gpt-5-mini",
+        "canonical_slug": "openai/gpt-5-mini-2025-08-07",
+        "hugging_face_id": "",
+        "name": "GPT-5 Mini",
+        "created": 1754587407,
+        "description": "GPT-5 Mini is a compact version of GPT-5, designed to handle lighter-weight reasoning tasks. It provides the same instruction-following and safety-tuning benefits as GPT-5, but with reduced latency and cost. GPT-5 Mini is the successor to OpenAI's o4-mini model.",
+        "context_length": 400000,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "text",
+                "image",
+                "file"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "GPT",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00000025",
+            "completion": "0.000002",
+            "request": "0",
+            "image": "0",
+            "web_search": "0.01",
+            "internal_reasoning": "0",
+            "input_cache_read": "0.000000025"
+        },
+        "top_provider": {
+            "context_length": 400000,
+            "max_completion_tokens": 128000,
+            "is_moderated": true
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "tool_choice",
+            "tools"
+        ],
+        "default_parameters": {}
+    },
+    {
+        "id": "openai/gpt-oss-120b",
+        "canonical_slug": "openai/gpt-oss-120b",
+        "hugging_face_id": "openai/gpt-oss-120b",
+        "name": "gpt-oss-120b",
+        "created": 1754414231,
+        "description": "gpt-oss-120b is an open-weight, 117B-parameter Mixture-of-Experts (MoE) language model from OpenAI designed for high-reasoning, agentic, and general-purpose production use cases. It activates 5.1B parameters per forward pass and is optimized to run on a single H100 GPU with native MXFP4 quantization. The model supports configurable reasoning depth, full chain-of-thought access, and native tool use, including function calling, browsing, and structured output generation.",
+        "context_length": 131072,
+        "architecture": {
+            "modality": "text->text",
+            "input_modalities": [
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "GPT",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.000000039",
+            "completion": "0.00000019",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 131072,
+            "max_completion_tokens": null,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "reasoning_effort",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "openai/gpt-oss-20b",
+        "canonical_slug": "openai/gpt-oss-20b",
+        "hugging_face_id": "openai/gpt-oss-20b",
+        "name": "gpt-oss-20b",
+        "created": 1754414229,
+        "description": "gpt-oss-20b is an open-weight 21B parameter model released by OpenAI under the Apache 2.0 license. It uses a Mixture-of-Experts (MoE) architecture with 3.6B active parameters per forward pass, optimized for lower-latency inference and deployability on consumer or single-GPU hardware. The model is trained in OpenAI’s Harmony response format and supports reasoning level configuration, fine-tuning, and agentic capabilities including function calling, tool use, and structured outputs.",
+        "context_length": 131072,
+        "architecture": {
+            "modality": "text->text",
+            "input_modalities": [
+                "text"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "GPT",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00000002",
+            "completion": "0.0000001",
+            "request": "0",
+            "image": "0",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 131072,
+            "max_completion_tokens": 131072,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "reasoning_effort",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+        ],
+        "default_parameters": {
+            "temperature": null,
+            "top_p": null,
+            "frequency_penalty": null
+        }
+    },
+    {
+        "id": "meta-llama/llama-4-maverick",
+        "canonical_slug": "meta-llama/llama-4-maverick-17b-128e-instruct",
+        "hugging_face_id": "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+        "name": "Llama 4 Maverick",
+        "created": 1743881822,
+        "description": "Llama 4 Maverick 17B Instruct (128E) is a high-capacity multimodal language model from Meta, built on a mixture-of-experts (MoE) architecture with 128 experts and 17 billion active parameters per forward pass (400B total). It supports multilingual text and image input, and produces multilingual text and code output across 12 supported languages. Optimized for vision-language tasks, Maverick is instruction-tuned for assistant-like behavior, image reasoning, and general-purpose multimodal interaction.\n\nMaverick features early fusion for native multimodality and a 1 million token context window. It was trained on a curated mixture of public, licensed, and Meta-platform data, covering ~22 trillion tokens, with a knowledge cutoff in August 2024. Released on April 5, 2025 under the Llama 4 Community License, Maverick is suited for research and commercial applications requiring advanced multimodal understanding and high model throughput.",
+        "context_length": 1048576,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "text",
+                "image"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Llama4",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00000015",
+            "completion": "0.0000006",
+            "request": "0",
+            "image": "0.0006684",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 1048576,
+            "max_completion_tokens": 16384,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+        ],
+        "default_parameters": {}
+    },
+    {
+        "id": "meta-llama/llama-4-scout",
+        "canonical_slug": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "hugging_face_id": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+        "name": "Llama 4 Scout",
+        "created": 1743881519,
+        "description": "Llama 4 Scout 17B Instruct (16E) is a mixture-of-experts (MoE) language model developed by Meta, activating 17 billion parameters out of a total of 109B. It supports native multimodal input (text and image) and multilingual output (text and code) across 12 supported languages. Designed for assistant-style interaction and visual reasoning, Scout uses 16 experts per forward pass and features a context length of 10 million tokens, with a training corpus of ~40 trillion tokens.\n\nBuilt for high efficiency and local or commercial deployment, Llama 4 Scout incorporates early fusion for seamless modality integration. It is instruction-tuned for use in multilingual chat, captioning, and image understanding tasks. Released under the Llama 4 Community License, it was last trained on data up to August 2024 and launched publicly on April 5, 2025.",
+        "context_length": 327680,
+        "architecture": {
+            "modality": "text+image->text",
+            "input_modalities": [
+                "text",
+                "image"
+            ],
+            "output_modalities": [
+                "text"
+            ],
+            "tokenizer": "Llama4",
+            "instruct_type": null
+        },
+        "pricing": {
+            "prompt": "0.00000008",
+            "completion": "0.0000003",
+            "request": "0",
+            "image": "0.0003342",
+            "web_search": "0",
+            "internal_reasoning": "0"
+        },
+        "top_provider": {
+            "context_length": 327680,
+            "max_completion_tokens": 16384,
+            "is_moderated": false
+        },
+        "per_request_limits": null,
+        "supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+        ],
+        "default_parameters": {}
+    }
+]

@@ -1,0 +1,7 @@
+{
+  "name": "joory-rewrite",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
