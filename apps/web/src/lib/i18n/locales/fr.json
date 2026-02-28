@@ -31,7 +31,8 @@
 		"images": "Images",
 		"video": "Vidéo",
 		"files": "Fichiers",
-		"noDescription": "Aucune description disponible."
+		"noDescription": "Aucune description disponible.",
+		"loadError": "Échec du chargement des données. Veuillez réessayer."
 	},
 	"nav": {
 		"newChat": "Nouvelle conversation",

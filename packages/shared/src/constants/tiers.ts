@@ -7,11 +7,12 @@ export const TIER_CONFIG = {
     priceMonthlyUSD: 0,
     priceMonthlySYP: 0,
     monthlyBudgetPoints: 50,
-    windowCapacity: 5,
+    windowCapacity: 10,
+    overageCapacity: 100,
     windowDurationMs: 4 * 60 * 60 * 1000,
     features: [
       "20+ AI models",
-      "5 messages per 4-hour window",
+      "10 messages per 4-hour window",
       "50 points monthly budget",
       "Basic attachments",
     ],
@@ -30,6 +31,7 @@ export const TIER_CONFIG = {
     priceMonthlySYP: 840,
     monthlyBudgetPoints: 420,
     windowCapacity: 20,
+    overageCapacity: 200,
     windowDurationMs: 4 * 60 * 60 * 1000,
     features: [
       "20+ AI models",

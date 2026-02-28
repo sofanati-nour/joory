@@ -80,3 +80,24 @@ export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 export type CreateConversation = z.infer<typeof CreateConversationSchema>;
 export type UpdateConversation = z.infer<typeof UpdateConversationSchema>;
 export type BranchInfo = z.infer<typeof BranchInfoSchema>;
+
+// Chat stream event protocol
+// The API pipes raw AI SDK fullStream parts plus custom events.
+// Each SSE `data:` field is a JSON-serialised ChatStreamEvent.
+// Two 'finish' events are emitted: the AI SDK's own (has 'response' field,
+// client ignores it) and our custom done signal (no 'response' field).
+
+export const ChatStreamEventSchema = z.discriminatedUnion("type", [
+    // AI SDK fullStream parts (subset the client cares about)
+    z.object({ type: z.literal("text-delta"), textDelta: z.string() }),
+    z.object({ type: z.literal("reasoning"), textDelta: z.string() }),
+    z.object({ type: z.literal("step-start") }).passthrough(),
+    z.object({ type: z.literal("step-finish") }).passthrough(),
+    // 'finish' covers both variants; client checks for 'response' at runtime
+    z.object({ type: z.literal("finish"), finishReason: z.string(), response: z.unknown().optional() }).passthrough(),
+    // Custom events
+    z.object({ type: z.literal("title"), value: z.string() }),
+    z.object({ type: z.literal("error"), message: z.string() }),
+]);
+
+export type ChatStreamEvent = z.infer<typeof ChatStreamEventSchema>;

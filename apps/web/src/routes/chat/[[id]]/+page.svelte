@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
-	import { messages, connect, loadChat, clearMessages, chatId, isGenerating } from '$lib/stores/chat';
+	import { messages, loadChat, clearMessages, chatId, isGenerating } from '$lib/stores/chat';
 	import { inputState } from '$lib/stores/input.svelte';
-	import { get } from 'svelte/store';
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import ChatInput from './ChatInput.svelte';
 	import UserMessage from './UserMessage.svelte';
 	import AssistantMessage from './AssistantMessage.svelte';
@@ -15,35 +14,15 @@
 	let shouldSmoothScroll = $state(false);
 	let chatUUID = $state('');
 
+	// Enable smooth scrolling after initial mount
 	onMount(() => {
-		connect('');
-
-		if (params.id) {
-			// Load existing chat
-			if (get(chatId) !== params.id) {
-				clearMessages();
-				loadChat(null, params.id);
-			}
-			chatUUID = params.id;
-		} else {
-			// New chat
-			clearMessages();
-			chatId.set('');
-			inputState.reset();
-		}
-
-		// Enable smooth scrolling after initial load
 		setTimeout(() => {
 			shouldSmoothScroll = true;
 		}, 150);
 	});
 
+	// Handle route changes (including initial load)
 	$effect(() => {
-		if ($messages) {
-			scrollToBottom();
-		}
-
-		// Handle route changes (switching between chats)
 		if (params.id && params.id !== chatUUID) {
 			// Don't interrupt if we're currently generating a response
 			// (this happens when navigating from new chat to its assigned ID)
@@ -51,11 +30,9 @@
 				chatUUID = params.id;
 				return;
 			}
-
-			// Switching to an existing chat
 			shouldSmoothScroll = false;
 			clearMessages();
-			loadChat(null, params.id);
+			loadChat(params.id);
 			chatUUID = params.id;
 			setTimeout(() => {
 				shouldSmoothScroll = true;
@@ -73,6 +50,13 @@
 		}
 	});
 
+	// Scroll to bottom whenever messages update
+	$effect(() => {
+		if ($messages) {
+			scrollToBottom();
+		}
+	});
+
 	async function scrollToBottom() {
 		await tick();
 		if (chatContainer) {
@@ -82,8 +66,6 @@
 			});
 		}
 	}
-
-	const canScrollToBottom = $derived($messages.length > 0 && chatContainer && chatContainer.scrollHeight > chatContainer.clientHeight);
 </script>
 
 <main

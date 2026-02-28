@@ -22,7 +22,8 @@
 	};
 
 	let files = $state<FileData[]>([]);
-	
+	let loadError = $state<string | null>(null);
+
 	// Stats
 	let usage = $derived(files.reduce((acc, f) => acc + f.size, 0));
 	let limit = 1000 * 1024 * 1024; // 1GB in bytes
@@ -45,9 +46,12 @@
 			const res = await fetch(`${API_BASE}/api/files`, { credentials: 'include' });
 			if (res.ok) {
 				files = await res.json();
+			} else {
+				loadError = $_('common.loadError');
 			}
 		} catch (e) {
 			console.error("Failed to load files", e);
+			loadError = $_('common.loadError');
 		}
 	});
 
@@ -93,6 +97,12 @@
 			<Progress value={usagePercent} />
 		</Card.Content>
 	</Card.Root>
+
+	{#if loadError}
+		<div class="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+			{loadError}
+		</div>
+	{/if}
 
 	<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 		{#each files as file}

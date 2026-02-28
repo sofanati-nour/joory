@@ -74,6 +74,10 @@ The API is currently a scaffold. The intended structure (from `structure.md`) is
 - `src/lib/openrouter.ts` — AI SDK + OpenRouter provider setup
 - `src/lib/auth.ts` — Better Auth server config
 
+## Model Data Flow
+
+`@app/shared` → `MODEL_CATALOG` is the **only** source of model data. The frontend imports it directly — there is no separate `allowed.ts`, `models.ts` wrapper, or `data/models.json`. The models store (`stores/models.ts`) seeds its writable store with `MODEL_CATALOG`. The `Model` type is always imported from `@app/shared`, never defined locally.
+
 ## Key Conventions
 
 - **TypeScript strict mode** is on everywhere. Prefer `z.infer` types over manual interface declarations.

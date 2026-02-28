@@ -1,31 +1,23 @@
 import type { LayoutServerLoad } from './$types';
+import { env } from '$env/dynamic/public';
+
 export const ssr = false;
 
-export const load: LayoutServerLoad = async ({ cookies, fetch }) => {
-    const AUTH_PROVIDER_URL = process.env.PUBLIC_AUTH_PROVIDER_URL;
+export const load: LayoutServerLoad = async ({ fetch, request }) => {
+    const API_BASE = env.PUBLIC_API_BASE ?? 'http://localhost:3001';
+    const cookieHeader = request.headers.get('cookie') ?? '';
 
-    // 1. Get the token from the cookie
-    const accessToken = cookies.get('access_token');
-
-    // 2. If no token, user is not logged in
-    if (!accessToken) {
-        return { user: null };
-    }
-
-    // 3. Use the token to fetch user details from your Passport App
-    // Note: We use the SvelteKit 'fetch' wrapper here
-    const response = await fetch(`${AUTH_PROVIDER_URL}/api/user`, {
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Accept': 'application/json'
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/get-session`, {
+            headers: { cookie: cookieHeader },
+        });
+        if (res.ok) {
+            const data = await res.json();
+            return { user: data?.user ?? null };
         }
-    });
-
-    if (response.ok) {
-        const user = await response.json();
-        return { user };
-    } else {
-        const text = await response.text();
-        return { user: null };
+    } catch {
+        // Network error or similar — return unauthenticated
     }
+
+    return { user: null };
 };

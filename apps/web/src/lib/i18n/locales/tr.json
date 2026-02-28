@@ -31,7 +31,8 @@
 		"images": "Görseller",
 		"video": "Video",
 		"files": "Dosyalar",
-		"noDescription": "Açıklama mevcut değil."
+		"noDescription": "Açıklama mevcut değil.",
+		"loadError": "Veriler yüklenemedi. Lütfen tekrar deneyin."
 	},
 	"nav": {
 		"newChat": "Yeni Sohbet",

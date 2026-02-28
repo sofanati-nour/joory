@@ -3,6 +3,12 @@ import { API_BASE } from '$lib/constants';
 import { get, writable } from 'svelte/store';
 import { chatState } from '$lib/stores/chats.svelte';
 import { models } from '$lib/stores/models';
+import { inputState } from './input.svelte';
+import type { ModelId } from '@app/shared';
+
+type ChatFile = { name: string; type: string; data: string };
+
+export type ToolCall = { id: string; name: string; done: boolean };
 
 export type Message = {
 	role: 'user' | 'assistant';
@@ -11,31 +17,29 @@ export type Message = {
 	status?: string;
 	model?: string;
 	messageId?: string;
-	files?: any[];
+	files?: ChatFile[];
+	toolCalls?: ToolCall[];
 };
 
 export const messages = writable<Message[]>([]);
-export const quota = writable<number | null>(null);
 export const chatId = writable<string>('');
 export const isGenerating = writable<boolean>(false);
 export const isDone = writable<boolean>(false);
 
-let authToken = '';
-
-export const connect = (token: string) => {
-	authToken = token;
-};
-
-const validateMessageBeforeSending = (content: string, modelId: string, hasFiles: boolean): Array<Error> | null => {
+const validateMessageBeforeSending = (
+	content: string,
+	modelId: string,
+	hasFiles: boolean
+): Array<Error> | null => {
 	let errorBag: Array<Error> = [];
 	if (modelId.trim() === '' || !modelId) {
-		errorBag.push(new Error("You need to select a Model before sending"));
+		errorBag.push(new Error('You need to select a Model before sending'));
 	}
 	if (!get(models).some((model) => model.id === modelId)) {
-		errorBag.push(new Error("Model not found"));
+		errorBag.push(new Error('Model not found'));
 	}
 	if (content.trim() === '' && !hasFiles) {
-		errorBag.push(new Error("You need to enter a message or attach a file before sending"));
+		errorBag.push(new Error('You need to enter a message or attach a file before sending'));
 	}
 
 	if (errorBag.length > 0) {
@@ -43,16 +47,20 @@ const validateMessageBeforeSending = (content: string, modelId: string, hasFiles
 	}
 
 	return null;
-}
+};
 
-export const sendMessage = async (content: string, model: string, chatUUID: string, options: { webSearch?: boolean, reasoning?: boolean, files?: any[] } = {}) => {
+export const sendMessage = async (
+	content: string,
+	model: string,
+	chatUUID: string,
+	options: { webSearch?: boolean; reasoning?: boolean; files?: ChatFile[] } = {}
+) => {
 	const errors = validateMessageBeforeSending(content, model, (options.files?.length ?? 0) > 0);
 	if (errors) {
 		errors.forEach((error) => {
 			throw error;
 		});
 	}
-
 
 	isGenerating.set(true);
 	messages.update((msgs) => [
@@ -61,17 +69,16 @@ export const sendMessage = async (content: string, model: string, chatUUID: stri
 		{ role: 'assistant', content: '', reasoning: '', status: '', model, messageId: undefined }
 	]);
 
-	const selectedModel = get(models).find((m) => m.id === model);
 	// Only use image generation endpoint if the model is strictly text-to-image.
-	// Multimodal models (text+image->text+image) use chat completions.
-	const isImageGeneration = selectedModel?.architecture.modality === 'text->image';
+	// No text-to-image-only models are in the current catalog.
+	const isImageGeneration = false;
 
 	try {
 		const res = await fetch(`${API_BASE}/api/chat`, {
 			method: 'POST',
 			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json',
+				'Content-Type': 'text/event-stream'
 			},
 			body: JSON.stringify({
 				message: content,
@@ -87,15 +94,6 @@ export const sendMessage = async (content: string, model: string, chatUUID: stri
 		if (!res.ok) {
 			isGenerating.set(false);
 			if (res.status === 429) {
-				// {
-				// 	"error": {
-				// 		"code": "quota_exceeded_standard",
-				// 		"details": {
-				// 			"quota_type": "standard"
-				// 		},
-				// 		"message": "You have exhausted your Standard Request quota for this period."
-				// 	}
-				// }
 				const errorDetails = await res.json();
 				console.error(errorDetails);
 				throw new Error(errorDetails.error.message);
@@ -103,16 +101,22 @@ export const sendMessage = async (content: string, model: string, chatUUID: stri
 			throw new Error(`Error: ${res.statusText}`);
 		}
 
-		const newChatId = res.headers.get('X-Chat-ID');
+		const newChatId = res.headers.get('x-chat-id');
 		if (newChatId && chatUUID !== newChatId) {
 			chatId.set(newChatId);
-			chatState.appendChat({ id: newChatId, title: null });
+			chatState.appendChat({ id: newChatId, title: null, pinned: false });
 			goto(`/chat/${newChatId}`, { replaceState: true, invalidateAll: false });
 		}
 
-		// Handle Stream
+		// Handle stream — each data line is a JSON-serialised AI SDK fullStream
+		// part or a custom event ({ type, ... }). The AI SDK emits its own
+		// 'finish' (with a 'response' field) before we send the title; our
+		// custom 'finish' (no 'response') is the real done signal.
 		const reader = res.body?.getReader();
-		if (!reader) return;
+		if (!reader) {
+			isGenerating.set(false);
+			return;
+		}
 
 		const decoder = new TextDecoder();
 		let buffer = '';
@@ -129,63 +133,104 @@ export const sendMessage = async (content: string, model: string, chatUUID: stri
 			for (const part of parts) {
 				if (!part.trim()) continue;
 
-				const lines = part.split('\n');
-				let event = 'message';
-				let dataLines: string[] = [];
+				for (const line of part.split('\n')) {
+					if (line.startsWith('event:')) continue; // keepalive
+					if (!line.startsWith('data:')) continue;
 
-				for (const line of lines) {
-					if (line.startsWith('event:')) {
-						event = line.slice(6).trim();
-					} else if (line.startsWith('data:')) {
-						let d = line.slice(5);
-						// if (d.startsWith(' ')) d = d.slice(1);
-						dataLines.push(d);
+					let raw = line.slice(5);
+					if (raw.startsWith(' ')) raw = raw.slice(1);
+					if (!raw) continue;
+
+					let event: Record<string, unknown>;
+					try {
+						event = JSON.parse(raw);
+					} catch {
+						continue;
 					}
-				}
 
-				const data = dataLines.join('\n');
+					switch (event.type) {
+						case 'tool-call':
+							messages.update((msgs) => {
+								const last = msgs[msgs.length - 1];
+								if (last?.role === 'assistant') {
+									const toolCalls = [
+										...(last.toolCalls ?? []),
+										{ id: event.toolCallId as string, name: event.toolName as string, done: false }
+									];
+									return [...msgs.slice(0, -1), { ...last, toolCalls }];
+								}
+								return msgs;
+							});
+							break;
 
-				if (event === 'done') {
-					isGenerating.set(false);
-					isDone.set(true);
-					return;
-				} else if (event === 'error') {
-					console.error('SSE Error:', data);
-					messages.update((msgs) => {
-						const last = msgs[msgs.length - 1];
-						if (last && last.role === 'assistant') {
-							return [...msgs.slice(0, -1), { ...last, content: last.content + `\n[Error: ${data}]` }];
-						}
-						return msgs;
-					});
-					isGenerating.set(false);
-					return;
-				} else if (event === 'message') {
-					messages.update((msgs) => {
-						const last = msgs[msgs.length - 1];
-						if (last && last.role === 'assistant') {
-							return [...msgs.slice(0, -1), { ...last, content: last.content + data }];
-						}
-						return msgs;
-					});
-				} else if (event === 'reasoning') {
-					messages.update((msgs) => {
-						const last = msgs[msgs.length - 1];
-						if (last && last.role === 'assistant') {
-							return [...msgs.slice(0, -1), { ...last, reasoning: (last.reasoning || '') + data }];
-						}
-						return msgs;
-					});
-				} else if (event === 'status') {
-					messages.update((msgs) => {
-						const last = msgs[msgs.length - 1];
-						if (last && last.role === 'assistant') {
-							return [...msgs.slice(0, -1), { ...last, status: data }];
-						}
-						return msgs;
-					});
-				} else if (event === 'title') {
-					chatState.updateTitle(get(chatId), data);
+						case 'tool-result':
+							messages.update((msgs) => {
+								const last = msgs[msgs.length - 1];
+								if (last?.role === 'assistant') {
+									const toolCalls = (last.toolCalls ?? []).map((tc) =>
+										tc.id === event.toolCallId ? { ...tc, done: true } : tc
+									);
+									return [...msgs.slice(0, -1), { ...last, toolCalls }];
+								}
+								return msgs;
+							});
+							break;
+
+						case 'text-delta':
+							messages.update((msgs) => {
+								const last = msgs[msgs.length - 1];
+								if (last?.role === 'assistant') {
+									return [
+										...msgs.slice(0, -1),
+										{ ...last, content: last.content + event.textDelta }
+									];
+								}
+								return msgs;
+							});
+							break;
+
+						case 'reasoning':
+							messages.update((msgs) => {
+								const last = msgs[msgs.length - 1];
+								if (last?.role === 'assistant') {
+									return [
+										...msgs.slice(0, -1),
+										{ ...last, reasoning: (last.reasoning ?? '') + event.textDelta }
+									];
+								}
+								return msgs;
+							});
+							break;
+
+						case 'title':
+							chatState.updateTitle(get(chatId), event.value as string);
+							break;
+
+						case 'finish':
+							// The AI SDK emits 'finish' with a 'response' field before the
+							// title is sent. Our custom 'finish' (no 'response') comes after
+							// the title and is the real done signal.
+							if (!('response' in event)) {
+								isGenerating.set(false);
+								isDone.set(true);
+								return;
+							}
+							break;
+
+						case 'error':
+							messages.update((msgs) => {
+								const last = msgs[msgs.length - 1];
+								if (last?.role === 'assistant') {
+									return [
+										...msgs.slice(0, -1),
+										{ ...last, content: last.content + `\n[Error: ${event.message}]` }
+									];
+								}
+								return msgs;
+							});
+							isGenerating.set(false);
+							return;
+					}
 				}
 			}
 		}
@@ -196,30 +241,29 @@ export const sendMessage = async (content: string, model: string, chatUUID: stri
 	}
 };
 
-export const loadChat = async (token: string | null, chatID: string) => {
+export const loadChat = async (chatID: string) => {
 	clearMessages();
 
 	chatId.set(chatID);
 
-	const headers: HeadersInit = {
-		'Content-Type': 'application/json',
-	};
-
-	if (token) {
-		headers['Authorization'] = `Bearer ${token}`;
-	}
-
 	const response = await fetch(`${API_BASE}/api/chat/${chatID}`, {
-		method: "POST",
+		method: 'POST',
 		credentials: 'include',
-		headers
+		headers: {
+			'Content-Type': 'application/json'
+		}
 	});
 
 	if (!response.ok) {
 		throw new Error('Failed to load chat');
 	}
 
-	const data = await response.json();
+	const data = (await response.json()) as Message[];
+	//const assistantMessages = data.filter((msg) => msg.role === 'assistant');
+	const lastMessageModel = 'google/gemini-3-flash-preview'; //assistantMessages[assistantMessages.length - 1].model;
+	if (lastMessageModel) {
+		inputState.setModel(lastMessageModel as ModelId);
+	}
 	messages.update((msgs) => [...msgs, ...data]);
 };
 

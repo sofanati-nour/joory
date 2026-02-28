@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-node'; // 👈 Change this import
+import adapter from 'svelte-adapter-bun'; // 👈 Change this import
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */

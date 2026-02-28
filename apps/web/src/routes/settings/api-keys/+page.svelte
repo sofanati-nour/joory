@@ -66,6 +66,8 @@
 		}
 	]);
 
+	let loadError = $state<string | null>(null);
+
 	onMount(async () => {
 		try {
 			const res = await fetch(`${API_BASE}/api/api-keys`, { credentials: 'include' });
@@ -79,9 +81,12 @@
 						p.key = k.api_key;
 					}
 				}
+			} else {
+				loadError = $_('common.loadError');
 			}
 		} catch (e) {
 			console.error(e);
+			loadError = $_('common.loadError');
 		}
 	});
 
@@ -134,6 +139,12 @@
 			{$_('apiKeys.description')}
 		</p>
 	</div>
+
+	{#if loadError}
+		<div class="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+			{loadError}
+		</div>
+	{/if}
 
 	<Card.Root class="bg-blue-500/5 border-blue-500/20">
 		<Card.Content class="p-4 flex gap-3 items-start">

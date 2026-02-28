@@ -7,7 +7,7 @@ export const getHighlighter = () => {
 	if (!highlighterPromise) {
 		highlighterPromise = createHighlighter({
 			themes: ['nord'],
-			langs: ['javascript', 'typescript', 'html', 'css', 'python', 'bash', 'json', 'svelte', 'text']
+			langs: ['javascript', 'typescript', 'html', 'css', 'python', 'bash', 'json', 'svelte', 'text', 'php']
 		}).then(h => {
             highlighterInstance = h;
             return h;

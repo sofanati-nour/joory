@@ -31,7 +31,8 @@
 		"images": "Wêne",
 		"video": "Vîdyo",
 		"files": "Pel",
-		"noDescription": "Danasîn tune ye."
+		"noDescription": "Danasîn tune ye.",
+		"loadError": "Barkirina daneyan bi ser neket. Ji kerema xwe dîsa biceribîne."
 	},
 	"nav": {
 		"newChat": "Axaftina nû",

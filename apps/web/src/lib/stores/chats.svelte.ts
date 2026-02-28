@@ -59,7 +59,6 @@ class ChatStore {
     appendChat(chat: Chat) {
         const newChat = {
             ...chat,
-            pinned: false,
             updated_at: chat.updated_at || new Date().toISOString()
         };
         this.chats = [newChat, ...this.chats];

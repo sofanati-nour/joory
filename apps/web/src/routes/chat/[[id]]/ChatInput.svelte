@@ -2,7 +2,8 @@
 	import { sendMessage, isGenerating, chatId } from '$lib/stores/chat';
 	import { userState } from '$lib/stores/user.svelte';
 	import { inputState } from '$lib/stores/input.svelte';
-	import allowedModels from '$lib/allowed';
+	import { models } from '$lib/stores/models';
+	import { ALLOWED_UPLOADS } from '@app/shared';
 	import { fileToBase64 } from '$lib/utils';
 	import { _ } from 'svelte-i18n';
 	import { cubicOut } from 'svelte/easing';
@@ -24,9 +25,11 @@
 	let isProcessingFiles = $state(false);
 	let fileError = $state<string | null>(null);
 
-	// Constants
-	const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-	const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
+	// Derive allowed types from the shared catalog — only image and PDF for chat attachments
+	const CHAT_ALLOWED_TYPES = Object.entries(ALLOWED_UPLOADS).filter(
+		([, v]) => v.category === 'image' || v.category === 'pdf'
+	);
+	const ACCEPT_STRING = CHAT_ALLOWED_TYPES.map(([mime]) => mime).join(',');
 
 	// Animation
 	let floatingProgress = new Tween(isFloating ? 1 : 0, { duration: 300, easing: cubicOut });
@@ -40,8 +43,9 @@
 
 	// User subscription logic
 	let isPremium = $derived(userState.subscription?.subscription === 'paid');
+	let currentModel = $derived($models.find((m) => m.id === inputState.model));
 	let currentTier = $derived(
-		allowedModels.find((m) => m.id === inputState.model)?.tier || 'standard'
+		currentModel?.tier === 'ultra' || currentModel?.tier === 'premium' ? 'premium' : 'standard'
 	);
 	let remainingCredits = $derived.by(() => {
 		if (!userState.subscription) return 100;
@@ -110,7 +114,7 @@
 			});
 
 			// Refresh subscription after successful send
-			userState.fetchSubscription();
+			userState.fetchSubscription().catch(console.error);
 		} catch (error) {
 			console.error('Failed to send message:', error);
 
@@ -134,14 +138,15 @@
 
 		const files = Array.from(target.files);
 
-		// Validate files first
-		const validFiles = files.filter(file => {
-			if (file.size > MAX_FILE_SIZE) {
-				fileError = `${file.name} exceeds 10MB limit`;
+		// Validate files using per-type limits from the shared catalog
+		const validFiles = files.filter((file) => {
+			const config = ALLOWED_UPLOADS[file.type as keyof typeof ALLOWED_UPLOADS];
+			if (!config || (config.category !== 'image' && config.category !== 'pdf')) {
+				fileError = `${file.name} is not a supported file type`;
 				return false;
 			}
-			if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-				fileError = `${file.name} is not a supported file type`;
+			if (file.size > config.maxMB * 1024 * 1024) {
+				fileError = `${file.name} exceeds ${config.maxMB}MB limit`;
 				return false;
 			}
 			return true;
@@ -171,7 +176,9 @@
 
 		// Clear error after 5 seconds
 		if (fileError) {
-			setTimeout(() => { fileError = null; }, 5000);
+			setTimeout(() => {
+				fileError = null;
+			}, 5000);
 		}
 	}
 
@@ -209,14 +216,20 @@
 
 				<!-- File Error Alert -->
 				{#if fileError}
-					<div class="mb-2 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+					<div
+						class="mb-2 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+						role="alert"
+					>
 						{fileError}
 					</div>
 				{/if}
 
 				<!-- File Processing Indicator -->
 				{#if isProcessingFiles}
-					<div class="mb-2 rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-sm text-primary" role="status">
+					<div
+						class="mb-2 rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-sm text-primary"
+						role="status"
+					>
 						Processing files...
 					</div>
 				{/if}
@@ -251,11 +264,11 @@
 								name="input"
 								id="chat-input"
 								bind:value={inputState.text}
-								bind:this={textareaElement}
+								bind:ref={textareaElement}
 								placeholder={$_('chat.inputPlaceholder')}
-								class="w-full min-w-0 resize-none bg-transparent py-2 text-base leading-6 text-foreground outline-none placeholder:text-muted-foreground/60 disabled:opacity-50"
+								class="w-full min-w-0 resize-none bg-transparent py-2 text-base leading-6 text-foreground outline-none placeholder:text-muted-foreground/60 rounded-lg disabled:opacity-50 placeholder-shown:bg-transparent [:not(:placeholder-shown)]:bg-white/50"
 								onkeydown={handleEnter}
-								disabled={!canSubmit && $isGenerating}
+								disabled={$isGenerating || isProcessingFiles}
 								aria-busy={$isGenerating}
 								style="max-height: 240px !important;"
 							/>
@@ -267,11 +280,11 @@
 						<input
 							type="file"
 							multiple
-							accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
+							accept={ACCEPT_STRING}
 							class="hidden"
 							bind:this={fileInput}
 							onchange={handleFileChange}
-							aria-label="Attach files (images or PDFs, max 10MB)"
+							aria-label="Attach files (images or PDFs)"
 						/>
 
 						<!-- Actions -->

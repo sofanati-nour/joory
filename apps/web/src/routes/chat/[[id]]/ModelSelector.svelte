@@ -5,7 +5,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import * as InputGroup from '$lib/components/ui/input-group';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import allowedModels from '$lib/allowed';
+	import { MODEL_CATALOG } from '@app/shared';
 
 	import {
 		ChevronDown as ChevronDownIcon,
@@ -14,8 +14,7 @@
 		Filter,
 		Eye as EyeIcon,
 		FileText,
-		ImagePlus,
-		Brain as ReasoningIcon
+		Brain
 	} from '@lucide/svelte';
 	import * as Icon from '$lib/components/icons';
 	import { _ } from 'svelte-i18n';
@@ -28,17 +27,21 @@
 	let isPremium = $derived(userState.subscription?.subscription === 'paid');
 	let isPopoverOpen = $state(false);
 
+	type ProviderInfo = { icon: any; label: string };
+	const PROVIDER_ICON_MAP: Record<string, ProviderInfo> = {
+		anthropic: { icon: Icon.Anthropic, label: 'Anthropic' },
+		openai: { icon: Icon.OpenAI, label: 'OpenAI' },
+		google: { icon: Icon.Google, label: 'Google' },
+		'x-ai': { icon: Icon.XAi, label: 'X AI' },
+		deepseek: { icon: Icon.Deepseek, label: 'DeepSeek' },
+		'meta-llama': { icon: Icon.Meta, label: 'Meta' }
+	};
+
 	const providers = [
 		{ id: 'all', icon: Star, label: 'All' },
-		{ id: 'anthropic', icon: Icon.Anthropic, label: 'Anthropic' },
-		{ id: 'deepseek', icon: Icon.Deepseek, label: 'DeepSeek' },
-		{ id: 'google', icon: Icon.Google, label: 'Google' },
-		{ id: 'meta-llama', icon: Icon.Meta, label: 'Meta' },
-		{ id: 'minimax', icon: Icon.Minimax, label: 'Minimax' },
-		{ id: 'moonshotai', icon: Icon.Moonshot, label: 'Moonshot' },
-		{ id: 'openai', icon: Icon.OpenAI, label: 'OpenAI' },
-		{ id: 'x-ai', icon: Icon.XAi, label: 'X AI' },
-		{ id: 'z-ai', icon: Icon.ZAi, label: 'Z AI' }
+		...MODEL_CATALOG.map((m) => m.id.split('/')[0])
+			.filter((p, i, arr) => arr.indexOf(p) === i && p in PROVIDER_ICON_MAP)
+			.map((p) => ({ id: p, ...PROVIDER_ICON_MAP[p] }))
 	];
 </script>
 
@@ -51,15 +54,14 @@
 		>
 			<div class="min-w-0">
 				<div class="truncate font-normal" dir={localeStore.dir}>
-					{#if model.endsWith(':reasoning')}
-						{@const baseId = model.split(':')[0]}
-						{($models.find((m) => m.id === baseId)?.name || 'Unknown') + ' (Reasoning)'}
-					{:else}
-						{$models.find((m) => m.id === model)?.name || $_('models.selectModel')}
-					{/if}
+					{$models.find((m) => m.id === model)?.name || $_('models.selectModel')}
 				</div>
 			</div>
-			<ChevronDownIcon class="size-3.5 transition-transform duration-100 {isPopoverOpen ? 'rotate-180' : 'rotate-0'} opacity-50" />
+			<ChevronDownIcon
+				class="size-3.5 transition-transform duration-100 {isPopoverOpen
+					? 'rotate-180'
+					: 'rotate-0'} opacity-50"
+			/>
 		</Button>
 	</Popover.Trigger>
 	<Popover.Content
@@ -142,25 +144,11 @@
 						{$_('models.noModelsLoaded')}
 					</div>
 				{:else}
-					{@const filtered = $models.flatMap((m) => {
+					{@const filtered = $models.filter((m) => {
 						const matchesSearch = m.name.toLowerCase().includes(searchModel.toLowerCase());
 						const matchesCategory =
-							selectedProvider === 'all'
-								? true
-								: m.id.toLowerCase().includes(selectedProvider) ||
-									m.name.toLowerCase().includes(selectedProvider);
-
-						if (!matchesSearch || !matchesCategory) return [];
-
-						const result = [m];
-						if (m.supported_parameters.includes('reasoning')) {
-							result.push({
-								...m,
-								id: `${m.id}:reasoning`,
-								name: `${m.name} (Reasoning)`
-							});
-						}
-						return result;
+							selectedProvider === 'all' || m.id.split('/')[0] === selectedProvider;
+						return matchesSearch && matchesCategory;
 					})}
 
 					{#if filtered.length === 0}
@@ -176,32 +164,16 @@
 							m.id
 								? 'bg-white shadow-sm ring-1 ring-black/5 dark:bg-zinc-900 dark:ring-white/10'
 								: 'bg-transparent shadow-none ring-0'}"
-							disabled={!allowedModels.find((am) => am.id === m.id.split(':')[0])?.free &&
-								!isPremium}
+							disabled={m.tier !== 'free' && !isPremium}
 							onclick={() => (model = m.id)}
 						>
 							<div class="flex w-full items-center justify-between">
 								<div class="flex items-center gap-2">
-									<!-- Icon placeholder based on name/id -->
-									{#if selectedProvider == 'all'}
-										{#if m.id.startsWith('google/')}
-											<Icon.Google class="size-4 text-muted-foreground" />
-										{:else if m.id.includes('openai/')}
-											<Icon.OpenAI class="size-4 text-muted-foreground" />
-										{:else if m.id.includes('anthropic/')}
-											<Icon.Anthropic class="size-4 text-muted-foreground" />
-										{:else if m.id.includes('deepseek/')}
-											<Icon.Deepseek class="size-4 text-muted-foreground" />
-										{:else if m.id.includes('meta-llama/')}
-											<Icon.Meta class="size-4 text-muted-foreground" />
-										{:else if m.id.includes('minimax/')}
-											<Icon.Minimax class="size-4 text-muted-foreground" />
-										{:else if m.id.includes('moonshotai/')}
-											<Icon.Moonshot class="size-4 text-muted-foreground" />
-										{:else if m.id.includes('z-ai/')}
-											<Icon.ZAi class="size-4 text-muted-foreground" />
-										{:else if m.id.includes('x-ai/')}
-											<Icon.XAi class="size-4 text-muted-foreground" />
+									{#if selectedProvider === 'all'}
+										{@const prefix = m.id.split('/')[0]}
+										{@const providerInfo = PROVIDER_ICON_MAP[prefix]}
+										{#if providerInfo}
+											<providerInfo.icon class="size-4 text-muted-foreground" />
 										{/if}
 									{/if}
 									<span
@@ -215,12 +187,12 @@
 								<div
 									class="ml-auto flex items-center gap-0.5 rounded-full bg-muted-foreground/8 p-0.75"
 								>
-									{#if m.architecture.input_modalities.includes('image')}
+									{#if m.supportsImages}
 										<Tooltip.Root>
 											<Tooltip.Trigger class="inline-flex size-5">
 												<span class="inline-flex">
 													<div
-														class="relative flex size-5 items-center justify-center overflow-hidden text-(--color) dark:text-(--color-dark)"
+														class="relative flex size-5 items-center justify-center overflow-hidden"
 													>
 														<EyeIcon class="size-3.5 text-emerald-500" />
 													</div>
@@ -232,12 +204,12 @@
 										</Tooltip.Root>
 									{/if}
 
-									{#if m.architecture.input_modalities.includes('file')}
+									{#if m.supportsPdf}
 										<Tooltip.Root>
 											<Tooltip.Trigger class="inline-flex size-5">
 												<span class="inline-flex">
 													<div
-														class="relative flex size-5 items-center justify-center overflow-hidden text-(--color) dark:text-(--color-dark)"
+														class="relative flex size-5 items-center justify-center overflow-hidden"
 													>
 														<FileText class="size-3.5 text-blue-600" />
 													</div>
@@ -248,30 +220,15 @@
 											</Tooltip.Content>
 										</Tooltip.Root>
 									{/if}
-									{#if m.architecture.output_modalities.includes('image')}
+
+									{#if m.reasoning}
 										<Tooltip.Root>
 											<Tooltip.Trigger class="inline-flex size-5">
 												<span class="inline-flex">
 													<div
-														class="relative flex size-5 items-center justify-center overflow-hidden text-(--color) dark:text-(--color-dark)"
+														class="relative flex size-5 items-center justify-center overflow-hidden"
 													>
-														<ImagePlus class="size-3.5 text-orange-500" />
-													</div>
-												</span>
-											</Tooltip.Trigger>
-											<Tooltip.Content class="bg-primary">
-												<p>{$_('models.imageGeneration')}</p>
-											</Tooltip.Content>
-										</Tooltip.Root>
-									{/if}
-									{#if m.id.endsWith(':reasoning')}
-										<Tooltip.Root>
-											<Tooltip.Trigger class="inline-flex size-5">
-												<span class="inline-flex">
-													<div
-														class="relative flex size-5 items-center justify-center overflow-hidden text-(--color) dark:text-(--color-dark)"
-													>
-														<ReasoningIcon class="size-3.5 text-purple-500" />
+														<Brain class="size-3.5 text-purple-600" />
 													</div>
 												</span>
 											</Tooltip.Trigger>
@@ -281,20 +238,6 @@
 										</Tooltip.Root>
 									{/if}
 								</div>
-							</div>
-							<div class="flex w-full items-start justify-between gap-4">
-								<Tooltip.Root>
-									<Tooltip.Trigger class=" min-w-0">
-										<span
-											class="line-clamp-1 truncate text-xs leading-relaxed text-muted-foreground"
-										>
-											{m.description || 'Capable model for general tasks.'}
-										</span>
-									</Tooltip.Trigger>
-									<Tooltip.Content class="border-reflect bg-accent text-accent-foreground">
-										<p class=" max-w-2xs">{m.description}</p>
-									</Tooltip.Content>
-								</Tooltip.Root>
 							</div>
 						</Button>
 					{/each}

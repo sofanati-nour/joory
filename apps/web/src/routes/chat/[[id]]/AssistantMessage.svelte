@@ -3,14 +3,16 @@
 	import { getHighlighter, getHighlighterInstance } from '$lib/highlighter';
 	import { markdownParser } from '$lib/markdown';
 	import { isGenerating } from '$lib/stores/chat';
+	import type { Message } from '$lib/stores/chat';
 	import { getSmartDirection } from '$lib/utils';
 	import CodeBlock from '$lib/components/ui/codeblock/CodeBlock.svelte';
-	import { onMount } from 'svelte';
-	import { Brain, Loader2 } from '@lucide/svelte';
+	import LinkPreview from '$lib/components/ui/link-preview/LinkPreview.svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
+	import { Brain, Check, Loader2, Wrench } from '@lucide/svelte';
 
-	let { msg } = $props();
+	let { msg }: { msg: Message } = $props();
 
-	type ContentPart = 
+	type ContentPart =
 		| { type: 'html'; content: string }
 		| { type: 'code'; code: string; lang: string; highlighted: string };
 
@@ -24,70 +26,100 @@
 			getHighlighter().then(() => {
 				highlighterReady = true;
 				// Force re-process to apply highlighting
-				processContent(msg.content); 
+				processContent(msg.content);
 			});
 		}
 	});
 
-	async function processContent(content: string) {
+	onDestroy(() => {
+		clearTimeout(parseTimeout);
+	});
+
+	// During streaming, infer incomplete syntax so content renders stably
+	// rather than flashing as it transitions from partial → complete form.
+	function inferContent(content: string): string {
+		let result = content;
+
+		// 1. Unclosed code fence → infer closing fence
+		//    Odd number of ``` means one block is still open.
+		const segments = result.split('```');
+		if (segments.length % 2 === 0) {
+			result = result + '\n```';
+		}
+
+		// 2. Unclosed markdown link URL: [text](url  →  [text](url)
+		result = result.replace(/(\[[^\]]*\]\([^)]*$)/, '$1)');
+
+		// 3. Unclosed markdown link label: [text  →  text (client-only heuristic)
+		//    Strip the leading [ so it renders as plain text instead of a
+		//    broken fragment that later snaps into a clickable link.
+		result = result.replace(/\[([^\]]*$)/, '$1');
+
+		return result;
+	}
+
+	async function processContent(rawContent: string) {
 		try {
-			// Use synchronous instance if available
+			const content = inferContent(rawContent);
 			const highlighter = getHighlighterInstance();
 
-			// Split content by code blocks first
+			// Use marked's lexer to tokenize — handles all valid code fence variants
+			// (different backtick counts, optional trailing spaces on the fence line, etc.)
+			// rather than a fragile custom regex.
+			const tokens = markdownParser.lexer(content);
+			// Preserve the links map so parser() resolves reference-style links correctly.
+			const links = (tokens as any).links ?? {};
 			const parts: ContentPart[] = [];
-			const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-			let lastIndex = 0;
-			let match;
+			let nonCodeTokens: (typeof tokens)[number][] = [];
 
-			while ((match = codeBlockRegex.exec(content)) !== null) {
-				// Add text before code block
-				if (match.index > lastIndex) {
-					const textContent = content.slice(lastIndex, match.index);
-					if (textContent.trim()) {
-						const parsed = await markdownParser.parse(textContent);
-						const sanitized = DOMPurify.sanitize(parsed);
-						parts.push({ type: 'html', content: sanitized });
-					}
-				}
-
-				// Add code block
-				const lang = match[1] || 'text';
-				const code = match[2].trim();
-				
-				let highlighted = '';
-				if (highlighter) {
-					try {
-						const validLang = highlighter.getLoadedLanguages().includes(lang) ? lang : 'text';
-						highlighted = highlighter.codeToHtml(code, { lang: validLang, theme: 'nord' });
-					} catch (e) {
-						highlighted = `<pre><code>${code}</code></pre>`;
-					}
-				} else {
-					// Fallback if highlighter not ready
-					highlighted = `<pre><code>${code}</code></pre>`;
-				}
-
-				parts.push({
-					type: 'code',
-					code: code,
-					lang: lang,
-					highlighted: highlighted
-				});
-
-				lastIndex = match.index + match[0].length;
-			}
-
-			// Add remaining text
-			if (lastIndex < content.length) {
-				const textContent = content.slice(lastIndex);
-				if (textContent.trim()) {
-					const parsed = await markdownParser.parse(textContent);
-					const sanitized = DOMPurify.sanitize(parsed);
+			const flushNonCode = () => {
+				if (nonCodeTokens.length === 0) return;
+				const subList = Object.assign([...nonCodeTokens], { links });
+				nonCodeTokens = [];
+				// Sanitize AFTER parsing so DOMPurify inspects the actual HTML output,
+				// not just the raw markdown source.
+				const sanitized = DOMPurify.sanitize(markdownParser.parser(subList as any));
+				if (sanitized.trim()) {
 					parts.push({ type: 'html', content: sanitized });
 				}
+			};
+
+			for (const token of tokens) {
+				if (token.type === 'code') {
+					flushNonCode();
+					const lang = token.lang || 'text';
+					const code = token.text;
+
+					let highlighted = '';
+					if (highlighter) {
+						try {
+							// Await loadLanguage before checking getLoadedLanguages() so the
+							// result reflects the completed load, not an in-flight one.
+							if (!highlighter.getLoadedLanguages().includes(lang)) {
+								try {
+									// @ts-ignore — loadLanguage exists at runtime
+									await highlighter.loadLanguage(lang);
+								} catch {
+									// Language not supported by shiki — fall back to 'text'
+								}
+							}
+							const validLang = highlighter.getLoadedLanguages().includes(lang) ? lang : 'text';
+							highlighted = highlighter.codeToHtml(code, { lang: validLang, theme: 'nord' });
+						} catch {
+							highlighted = `<pre><code>${code}</code></pre>`;
+						}
+					} else {
+						// Fallback if highlighter not ready
+						highlighted = `<pre><code>${code}</code></pre>`;
+					}
+
+					parts.push({ type: 'code', code, lang, highlighted });
+				} else {
+					nonCodeTokens.push(token);
+				}
 			}
 
+			flushNonCode();
 			contentParts = parts;
 		} catch (err) {
 			console.error(err);
@@ -99,7 +131,7 @@
 		clearTimeout(parseTimeout);
 
 		// If this is the first render or we have no parts yet, run immediately
-		if (contentParts.length === 0 && content) {
+		if (untrack(() => contentParts.length) === 0 && content) {
 			processContent(content);
 		} else {
 			// Debounce subsequent updates (streaming)
@@ -112,44 +144,103 @@
 	});
 
 	let dir = $derived(getSmartDirection(msg.content));
+
+	const TOOL_LABELS: Record<string, string> = {
+		fetchSanaFeed: 'Fetching SANA news',
+		fetchSpToday: 'Fetching exchange rates',
+		fetchAlikhbariaFeed: 'Fetching Alikhbaria news'
+	};
+	function formatToolName(name: string): string {
+		return TOOL_LABELS[name] ?? name.replace(/([A-Z])/g, ' $1').trim();
+	}
+
+	// Extract unique HTTP(S) links from the raw markdown, capped at 5.
+	// Skips image URLs (preceded by '!') since those render inline already.
+	// Use RegExp constructor (not a literal) so forward slashes in the pattern
+	// don't require escaping and can't accidentally terminate the regex literal.
+	const LINK_RE = new RegExp(
+		'(?<!!)\\[[^\\]]*\\]\\((https?://[^)]+)\\)|(?<![!(\\[])https?://\\S+',
+		'g'
+	);
+	let previewUrls = $derived.by(() => {
+		if ($isGenerating) return [];
+		const urls = new Set<string>();
+		let match: RegExpExecArray | null;
+		LINK_RE.lastIndex = 0;
+		while ((match = LINK_RE.exec(msg.content)) !== null) {
+			const url = match[1] ?? match[0];
+			try {
+				new URL(url);
+				urls.add(url);
+				if (urls.size >= 5) break;
+			} catch {
+				// skip malformed
+			}
+		}
+		return [...urls];
+	});
 </script>
 
-<div class="flex flex-col break-after-avoid justify-start gap-3 md:gap-4">
-	<div class="shrink-0 flex flex-col relative items-start">
-		<div class="flex size-8 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+<div class="flex break-after-avoid flex-col justify-start gap-3 md:gap-4">
+	<div class="relative flex shrink-0 flex-col items-start">
+		<div
+			class="flex size-8 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20"
+		>
 			<img src="/favicon.svg" alt="AI" class="size-5" />
 		</div>
 	</div>
 
-	<div class="group @container relative w-full max-w-full space-y-4 wrap-break-word overflow-hidden">
+	<div
+		class="group @container relative w-full max-w-full space-y-4 overflow-hidden wrap-break-word"
+	>
 		<div id={msg.messageId}>
 			<span class="sr-only">Assistant Reply:</span>
-			
+
 			<!-- Status / Tool Use -->
 			{#if msg.status && $isGenerating}
-				<div class="flex items-center gap-2 text-xs text-muted-foreground mb-2 animate-pulse">
+				<div class="mb-2 flex animate-pulse items-center gap-2 text-xs text-muted-foreground">
 					<Loader2 class="size-3 animate-spin" />
 					<span>{msg.status}</span>
 				</div>
 			{/if}
 
+			<!-- Tool Calls -->
+			{#if msg.toolCalls && msg.toolCalls.length > 0}
+				<div class="mb-3 flex flex-col gap-1.5">
+					{#each msg.toolCalls as tc (tc.id)}
+						<div class="flex items-center gap-2 text-xs text-muted-foreground">
+							{#if tc.done}
+								<Check class="size-3 text-green-500" />
+							{:else}
+								<Loader2 class="size-3 animate-spin" />
+							{/if}
+							<Wrench class="size-3 opacity-50" />
+							<span>{formatToolName(tc.name)}</span>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
 			<!-- Reasoning -->
 			{#if msg.reasoning}
-				<details class="mb-4 rounded-lg border border-border/50 bg-muted/30 open:bg-muted/50 transition-colors">
-					<summary class="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground">
+				<details
+					class="mb-4 rounded-lg border border-border/50 bg-muted/30 transition-colors open:bg-muted/50"
+				>
+					<summary
+						class="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground select-none hover:text-foreground"
+					>
 						<Brain class="size-3.5" />
 						<span>Process of thought</span>
 					</summary>
-					<div class="px-3 pb-3 pt-1 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed font-mono">
+					<div
+						class="px-3 pt-1 pb-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground"
+					>
 						{msg.reasoning}
 					</div>
 				</details>
 			{/if}
 
-			<article
-				class="prose prose-pink dark:prose-invert max-w-none"
-				dir={dir}
-			>
+			<article class="prose max-w-none prose-pink dark:prose-invert" {dir}>
 				{#if contentParts.length > 0}
 					{#each contentParts as part}
 						{#if part.type === 'html'}
@@ -160,6 +251,8 @@
 							</CodeBlock>
 						{/if}
 					{/each}
+				{:else if $isGenerating && msg.content}
+					<span class="break-words whitespace-pre-wrap">{msg.content}</span>
 				{:else if $isGenerating && !msg.status && !msg.reasoning}
 					<div class="typing-indicator">
 						<svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -181,6 +274,14 @@
 				{/if}
 			</article>
 		</div>
+
+		{#if previewUrls.length > 0}
+			<div class="flex flex-col gap-2">
+				{#each previewUrls as url (url)}
+					<LinkPreview {url} />
+				{/each}
+			</div>
+		{/if}
 	</div>
 </div>
 
