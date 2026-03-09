@@ -178,6 +178,12 @@
 		"messagePlaceholder": "Mesajınızın detaylarını buraya yazın...",
 		"sentSuccess": "Mesajınız başarıyla gönderildi. Yakında size geri döneceğiz."
 	},
+	"tools": {
+		"fetchSanaFeed": "SANA haberleri alınıyor",
+		"fetchSpToday": "Döviz kurları alınıyor",
+		"fetchAlikhbariaFeed": "Alikhbaria haberleri alınıyor",
+		"reasoning": "Düşünce süreci"
+	},
 	"chat": {
 		"howCanIHelp": "Size nasıl yardımcı olabilirim?",
 		"create": "Oluştur",

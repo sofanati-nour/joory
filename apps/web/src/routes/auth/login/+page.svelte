@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { authClient } from '$lib/auth';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
@@ -23,6 +23,7 @@
 				error = authError.message ?? 'Sign in failed';
 				isLoading = false;
 			} else {
+				await invalidateAll();
 				goto('/chat');
 			}
 		} else {
@@ -31,6 +32,7 @@
 				error = authError.message ?? 'Sign up failed';
 				isLoading = false;
 			} else {
+				await invalidateAll();
 				goto('/chat');
 			}
 		}

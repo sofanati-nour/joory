@@ -256,8 +256,8 @@ export const loadChat = async (chatID: string) => {
 	}
 
 	const data = (await response.json()) as Message[];
-	//const assistantMessages = data.filter((msg) => msg.role === 'assistant');
-	const lastMessageModel = 'google/gemini-3-flash-preview'; //assistantMessages[assistantMessages.length - 1].model;
+	const assistantMessages = data.filter((msg) => msg.role === 'assistant');
+	const lastMessageModel = assistantMessages[assistantMessages.length - 1]?.model;
 	if (lastMessageModel) {
 		inputState.setModel(lastMessageModel as ModelId);
 	}

@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import OPENROUTER_MODELS from "../constants/openrouterModels";
+import { MARKUP } from "../constants/tiers";
 
 export const ModelTierSchema = z.enum([
     "free", "cheap", "mid", "premium", "ultra"
@@ -49,20 +50,38 @@ const getProviderName = (modelId: ModelId): string => {
   return match && match[1] ? match[1] : "Unknown";
 }
 
-export const parseModelById = (props: {modelId: ModelId, name?: string}): Model => {
+/**
+ * Estimate the cost of a typical request in cents (1 point = 1 cent).
+ * Uses ~2000 input tokens + ~1000 output tokens as a baseline,
+ * multiplied by MARKUP.
+ */
+function estimatePointCost(promptPricePerToken: number, completionPricePerToken: number): number {
+  const estimatedInputTokens = 2000;
+  const estimatedOutputTokens = 1000;
+  const costDollars =
+    estimatedInputTokens * promptPricePerToken +
+    estimatedOutputTokens * completionPricePerToken;
+  const costCents = costDollars * 100 * MARKUP;
+  // Free models → 0; paid models → at least 0.01 (we use fractional cents)
+  return Math.round(costCents * 100) / 100; // round to 2 decimal places
+}
+
+export const parseModelById = (props: {modelId: ModelId, name?: string, tier?: ModelTier}): Model => {
+  const promptPrice = parseFloat(OPENROUTER_MODELS[props.modelId].pricing.prompt);
+  const completionPrice = parseFloat(OPENROUTER_MODELS[props.modelId].pricing.completion);
   return {
     id: props.modelId,
     name: props.name || OPENROUTER_MODELS[props.modelId].name,
     provider: getProviderName(props.modelId),
-    tier: "free",
+    tier: props.tier ?? "free",
     contextWindow: OPENROUTER_MODELS[props.modelId].context_length,
     maxOutput: OPENROUTER_MODELS[props.modelId].top_provider.max_completion_tokens,
     supportsImages: (OPENROUTER_MODELS[props.modelId].architecture.input_modalities as readonly string[]).includes("image"),
     supportsPdf: (OPENROUTER_MODELS[props.modelId].architecture.input_modalities as readonly string[]).includes("file"),
     supportsTools: (OPENROUTER_MODELS[props.modelId].supported_parameters as readonly string[] | undefined)?.includes("tools") ?? false,
     reasoning: (OPENROUTER_MODELS[props.modelId].supported_parameters as readonly string[]).includes("reasoning"),
-    pointCostEstimate: 1,
-    inputPricePer1M: parseFloat(OPENROUTER_MODELS[props.modelId].pricing.prompt) * 1_000_000,
-    outputPricePer1M: parseFloat(OPENROUTER_MODELS[props.modelId].pricing.completion) * 1_000_000,
+    pointCostEstimate: estimatePointCost(promptPrice, completionPrice),
+    inputPricePer1M: promptPrice * 1_000_000,
+    outputPricePer1M: completionPrice * 1_000_000,
   }
 };

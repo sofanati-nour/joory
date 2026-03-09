@@ -1,9 +1,14 @@
 import type { Model } from "../schemas/models";
 import OPEN_AI_MODEL_CATALOG from "./models/openai";
 import GOOGLE_MODEL_CATALOG from "./models/google";
+import ANTHROPIC_MODEL_CATALOG from "./models/anthropic";
+import X_AI_MODEL_CATALOG from "./models/x-ai";
+
 export const MODEL_CATALOG: Model[] = [
     ...OPEN_AI_MODEL_CATALOG,
-    ...GOOGLE_MODEL_CATALOG
+    ...GOOGLE_MODEL_CATALOG,
+    ...ANTHROPIC_MODEL_CATALOG,
+    ...X_AI_MODEL_CATALOG,
 ];
 
 export const MODEL_MAP = Object.fromEntries(

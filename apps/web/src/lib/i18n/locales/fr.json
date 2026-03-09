@@ -178,6 +178,12 @@
 		"messagePlaceholder": "Écrivez les détails de votre message ici...",
 		"sentSuccess": "Votre message a été envoyé avec succès. Nous vous répondrons bientôt."
 	},
+	"tools": {
+		"fetchSanaFeed": "Récupération des nouvelles SANA",
+		"fetchSpToday": "Récupération des taux de change",
+		"fetchAlikhbariaFeed": "Récupération des nouvelles Alikhbaria",
+		"reasoning": "Processus de réflexion"
+	},
 	"chat": {
 		"howCanIHelp": "Comment puis-je vous aider ?",
 		"create": "Créer",

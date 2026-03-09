@@ -15,6 +15,13 @@
       "when": 1771758442612,
       "tag": "0001_lumpy_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773081993141,
+      "tag": "0002_clever_shockwave",
+      "breakpoints": true
     }
   ]
 }

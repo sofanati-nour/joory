@@ -57,11 +57,11 @@ export const usagePeriods = pgTable("usage_periods", {
 
 export const usageBuckets = pgTable("usage_buckets", {
   userId: text("user_id").primaryKey(),
-  windowCapacity: integer("window_capacity").notNull().default(20),
-  windowRemaining: integer("window_remaining").notNull().default(20),
+  windowCapacity: real("window_capacity").notNull().default(70),
+  windowRemaining: real("window_remaining").notNull().default(70),
   windowResetsAt: timestamp("window_resets_at").notNull(),
-  overageCapacity: integer("overage_capacity").notNull().default(200),
-  overageRemaining: integer("overage_remaining").notNull().default(200),
+  overageCapacity: real("overage_capacity").notNull().default(350),
+  overageRemaining: real("overage_remaining").notNull().default(350),
   overageResetsAt: timestamp("overage_resets_at").notNull(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

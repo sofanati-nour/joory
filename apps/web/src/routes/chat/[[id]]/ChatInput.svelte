@@ -3,7 +3,7 @@
 	import { userState } from '$lib/stores/user.svelte';
 	import { inputState } from '$lib/stores/input.svelte';
 	import { models } from '$lib/stores/models';
-	import { ALLOWED_UPLOADS } from '@app/shared';
+	import { ALLOWED_UPLOADS, MODEL_MAP } from '@app/shared';
 	import { fileToBase64 } from '$lib/utils';
 	import { _ } from 'svelte-i18n';
 	import { cubicOut } from 'svelte/easing';
@@ -68,14 +68,25 @@
 		const originalUsage = userState.usage ? { ...userState.usage } : null;
 
 		try {
-			// Optimistic credit update
+			// Parse model for reasoning mode
+			let modelId = inputState.model;
+			let reasoning = false;
+			if (modelId.endsWith(':reasoning')) {
+				modelId = modelId.replace(':reasoning', '');
+				reasoning = true;
+			}
+
+			// Optimistic credit update (1 point = 1 cent)
 			if (userState.usage) {
-				if (userState.usage.windowRemaining > 0) {
-					userState.usage.windowRemaining = Math.max(0, userState.usage.windowRemaining - 1);
+				const estimatedCost = MODEL_MAP[modelId]?.pointCostEstimate ?? 0.5;
+				if (userState.usage.windowRemaining >= estimatedCost) {
+					userState.usage.windowRemaining = Math.max(0, userState.usage.windowRemaining - estimatedCost);
 				} else {
-					userState.usage.overageRemaining = Math.max(0, userState.usage.overageRemaining - 1);
+					const spillover = estimatedCost - userState.usage.windowRemaining;
+					userState.usage.windowRemaining = 0;
+					userState.usage.overageRemaining = Math.max(0, userState.usage.overageRemaining - spillover);
 				}
-				userState.usage.totalRemaining = Math.max(0, userState.usage.totalRemaining - 1);
+				userState.usage.totalRemaining = Math.max(0, userState.usage.totalRemaining - estimatedCost);
 			}
 
 			// Prepare files
@@ -84,14 +95,6 @@
 				type: f.file.type,
 				data: f.base64
 			}));
-
-			// Parse model for reasoning mode
-			let modelId = inputState.model;
-			let reasoning = false;
-			if (modelId.endsWith(':reasoning')) {
-				modelId = modelId.replace(':reasoning', '');
-				reasoning = true;
-			}
 
 			isFloating = false;
 

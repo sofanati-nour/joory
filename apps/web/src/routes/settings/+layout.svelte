@@ -12,8 +12,19 @@
 	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
 	import { _ } from 'svelte-i18n';
 	import { toast } from 'svelte-sonner';
+	import { authClient } from '$lib/auth';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { chatId } from '$lib/stores/chat';
+
+	const backHref = $derived($chatId ? `/chat/${$chatId}` : '/chat');
 
 	let { children, data } = $props();
+
+	async function handleLogout() {
+		await authClient.signOut();
+		await invalidateAll();
+		goto('/chat');
+	}
 	let user = $derived(data.user);
 	onMount(() => {
 		userState.fetchSubscription();
@@ -33,7 +44,7 @@
 <div class="max-h-screen w-full overflow-y-auto">
 	<div class="mx-auto flex max-w-300 flex-col overflow-y-auto px-4 pt-safe-offset-6 pb-24 md:px-6">
 		<header class="flex items-center justify-between pb-8">
-			<Button variant="ghost" href="/chat">
+			<Button variant="ghost" href={backHref}>
 				{#if localeStore.dir === 'rtl'}
 					<ArrowRightIcon class="size-4" />
 				{:else}
@@ -42,7 +53,7 @@
 				{$_('common.back')}
 			</Button>
 			<div class="flex flex-row items-center gap-2">
-				<Button variant="ghost" href="/auth/logout">{$_('common.logout')}</Button>
+				<Button variant="ghost" onclick={handleLogout}>{$_('common.logout')}</Button>
 			</div>
 		</header>
 		<div class="grid grid-cols-1 gap-16 md:grid-cols-[auto_1fr]">

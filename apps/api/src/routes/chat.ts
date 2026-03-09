@@ -6,7 +6,7 @@ import { conversations, messages } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { openrouter } from "../lib/openrouter";
 import { generateText, streamText } from "ai";
-import { checkAndDeduct } from "../lib/rateLimiter";
+import { checkAndDeduct, settleUsage, getActualCostCents } from "../lib/rateLimiter";
 import type { ChatStreamEvent } from "@app/shared";
 import { MODEL_MAP } from "@app/shared";
 import { fetchSanaFeedTool } from "../tools/fetchSanaFeed";
@@ -221,14 +221,17 @@ app.post("/", async (c) => {
         const assistantSiblingIndex = Number((assistantSiblingCount as any[])[0]?.count ?? 0);
 
         const awaitedUsage = await usage;
+        const inputTokens = awaitedUsage?.promptTokens ?? 0;
+        const outputTokens = awaitedUsage?.completionTokens ?? 0;
+
         const [assistantMessage] = await db.insert(messages).values({
           conversationId,
           parentId: userMessageId,
           role: "assistant",
           content: fullContent,
           model,
-          inputTokens: awaitedUsage?.promptTokens ?? 0,
-          outputTokens: awaitedUsage?.completionTokens ?? 0,
+          inputTokens,
+          outputTokens,
           durationMs,
           siblingIndex: assistantSiblingIndex,
         }).returning();
@@ -239,6 +242,10 @@ app.post("/", async (c) => {
             updatedAt: new Date(),
           })
           .where(eq(conversations.id, conversationId));
+
+        // Settle actual cost vs reserved estimate
+        const actualCost = getActualCostCents(model, inputTokens, outputTokens);
+        await settleUsage(user.id, rateLimitResult.reservedCost, actualCost);
       }
     } catch (error) {
       console.error("Chat error:", error instanceof Error ? error.stack : error);

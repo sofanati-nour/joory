@@ -11,9 +11,9 @@
 
 	let usage = $derived(userState.usage);
 
-	let windowUsed = $derived(usage ? usage.windowCapacity - usage.windowRemaining : 0);
-	let overageUsed = $derived(usage ? usage.overageCapacity - usage.overageRemaining : 0);
-	let totalUsed = $derived(usage ? usage.totalCapacity - usage.totalRemaining : 0);
+	let windowUsed = $derived(usage ? Math.round((usage.windowCapacity - usage.windowRemaining) * 100) / 100 : 0);
+	let overageUsed = $derived(usage ? Math.round((usage.overageCapacity - usage.overageRemaining) * 100) / 100 : 0);
+	let totalUsed = $derived(usage ? Math.round((usage.totalCapacity - usage.totalRemaining) * 100) / 100 : 0);
 
 	let cheatCodeActivated = $state(false);
 	let cheatCode = $state<Array<String>>([]);
@@ -79,9 +79,9 @@
 		<div class="flex flex-col gap-6">
 			<!-- Overall combined bar -->
 			<div class="flex flex-col gap-2">
-				<div class="flex justify-between">
-					<h3 class="text-sm font-medium">{$_('usage.overallUsage')}</h3>
-					<p class="text-sm text-muted-foreground">
+				<div class="flex items-center justify-between gap-2">
+					<h3 class="shrink-0 text-sm font-medium">{$_('usage.overallUsage')}</h3>
+					<p class="shrink-0 text-sm text-muted-foreground">
 						{$_('usage.percentRemaining', { values: { percent: Math.round(usage.percentRemaining) } })}
 						{#if cheatCodeActivated}
 							<Confetti x={[-0.5, 0.5]} y={[-0.5, 0.5]} />
@@ -93,26 +93,26 @@
 
 			<!-- Window bucket -->
 			<div class="flex flex-col gap-2">
-				<div class="flex justify-between">
-					<h3 class="text-sm font-medium">{$_('usage.windowBucket')}</h3>
-					<p class="text-sm text-muted-foreground">
+				<div class="flex items-center justify-between gap-2">
+					<h3 class="shrink-0 text-sm font-medium">{$_('usage.windowBucket')}</h3>
+					<p class="shrink-0 text-sm text-muted-foreground">
 						{windowUsed}/{usage.windowCapacity}
 					</p>
 				</div>
 				<Progress value={windowUsed} max={usage.windowCapacity} />
-				<p class="text-sm text-muted-foreground">{$_('usage.remaining', { values: { count: usage.windowRemaining } })}</p>
+				<p class="text-sm text-muted-foreground">{$_('usage.remaining', { values: { count: Math.round(usage.windowRemaining * 100) / 100 } })}</p>
 			</div>
 
 			<!-- Overage bucket -->
 			<div class="flex flex-col gap-2">
-				<div class="flex justify-between">
-					<h3 class="text-sm font-medium">{$_('usage.overageBucket')}</h3>
-					<p class="text-sm text-muted-foreground">
+				<div class="flex items-center justify-between gap-2">
+					<h3 class="shrink-0 text-sm font-medium">{$_('usage.overageBucket')}</h3>
+					<p class="shrink-0 text-sm text-muted-foreground">
 						{overageUsed}/{usage.overageCapacity}
 					</p>
 				</div>
 				<Progress value={overageUsed} max={usage.overageCapacity} class="bg-primary/20" />
-				<p class="text-sm text-muted-foreground">{$_('usage.remaining', { values: { count: usage.overageRemaining } })}</p>
+				<p class="text-sm text-muted-foreground">{$_('usage.remaining', { values: { count: Math.round(usage.overageRemaining * 100) / 100 } })}</p>
 			</div>
 		</div>
 	</Card.Content>

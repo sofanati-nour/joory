@@ -211,6 +211,12 @@
 		"messagePlaceholder": "Write the details of your message here...",
 		"sentSuccess": "Your message was sent successfully. We'll get back to you soon."
 	},
+	"tools": {
+		"fetchSanaFeed": "Fetching SANA news",
+		"fetchSpToday": "Fetching exchange rates",
+		"fetchAlikhbariaFeed": "Fetching Alikhbaria news",
+		"reasoning": "Process of thought"
+	},
 	"chat": {
 		"howCanIHelp": "How can I help you?",
 		"create": "Create",

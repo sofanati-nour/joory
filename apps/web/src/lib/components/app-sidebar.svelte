@@ -146,7 +146,7 @@
 											{#snippet child({ props })}
 												<a href={`/chat/${chat.id}`} {...props}>
 													<span class="truncate">{chat.title || $_('nav.newChat')}</span>
-													<div class="ml-auto flex gap-1 opacity-0 group-hover/item:opacity-100">
+													<div class="ms-auto flex gap-1 opacity-0 group-hover/item:opacity-100">
 														<button
 															class="rounded-md p-1 text-center text-muted-foreground hover:bg-muted hover:text-foreground"
 															onclick={(e) => handleTogglePin(e, chat.id)}
@@ -190,9 +190,7 @@
 					<div class="flex min-w-0 flex-col items-start text-sm">
 						<span class="truncate font-medium text-foreground">{user.name}</span>
 						<span class="truncate text-xs text-muted-foreground">
-							{userState.tier === 'pro'
-								? $_('nav.paidSubscription')
-								: $_('nav.freeSubscription')}
+							{userState.tier === 'pro' ? $_('nav.paidSubscription') : $_('nav.freeSubscription')}
 						</span>
 					</div>
 				</Button>

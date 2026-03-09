@@ -178,6 +178,12 @@
 		"messagePlaceholder": "Hûrguliyên peyama xwe li vir binivîse...",
 		"sentSuccess": "Peyama te bi serketî hate şandin. Em ê zû ji te re bersiv bidin."
 	},
+	"tools": {
+		"fetchSanaFeed": "Nûçeyên SANA tên anîn",
+		"fetchSpToday": "Rêjeyên danûstandinê tên anîn",
+		"fetchAlikhbariaFeed": "Nûçeyên Alikhbaria tên anîn",
+		"reasoning": "Pêvajoya ramanê"
+	},
 	"chat": {
 		"howCanIHelp": "Ez çawa dikarim alîkariya te bikim?",
 		"create": "Çêke",

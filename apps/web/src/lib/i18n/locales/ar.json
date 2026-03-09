@@ -207,6 +207,12 @@
 		"messagePlaceholder": "اكتب تفاصيل رسالتك هنا...",
 		"sentSuccess": "تم إرسال رسالتك بنجاح. سنرد عليك قريباً."
 	},
+	"tools": {
+		"fetchSanaFeed": "جلب أخبار سانا",
+		"fetchSpToday": "جلب أسعار الصرف",
+		"fetchAlikhbariaFeed": "جلب أخبار الإخبارية",
+		"reasoning": "سلسلة التفكير"
+	},
 	"chat": {
 		"howCanIHelp": "كيف فيني ساعدك؟",
 		"create": "انشئ",

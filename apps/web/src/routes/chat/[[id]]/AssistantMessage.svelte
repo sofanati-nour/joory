@@ -9,6 +9,7 @@
 	import LinkPreview from '$lib/components/ui/link-preview/LinkPreview.svelte';
 	import { onMount, onDestroy, untrack } from 'svelte';
 	import { Brain, Check, Loader2, Wrench } from '@lucide/svelte';
+	import { _ } from 'svelte-i18n';
 
 	let { msg }: { msg: Message } = $props();
 
@@ -145,13 +146,10 @@
 
 	let dir = $derived(getSmartDirection(msg.content));
 
-	const TOOL_LABELS: Record<string, string> = {
-		fetchSanaFeed: 'Fetching SANA news',
-		fetchSpToday: 'Fetching exchange rates',
-		fetchAlikhbariaFeed: 'Fetching Alikhbaria news'
-	};
 	function formatToolName(name: string): string {
-		return TOOL_LABELS[name] ?? name.replace(/([A-Z])/g, ' $1').trim();
+		const key = `tools.${name}`;
+		const translated = $_(key);
+		return translated !== key ? translated : name.replace(/([A-Z])/g, ' $1').trim();
 	}
 
 	// Extract unique HTTP(S) links from the raw markdown, capped at 5.
@@ -230,7 +228,7 @@
 						class="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground select-none hover:text-foreground"
 					>
 						<Brain class="size-3.5" />
-						<span>Process of thought</span>
+						<span>{$_('tools.reasoning')}</span>
 					</summary>
 					<div
 						class="px-3 pt-1 pb-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground"

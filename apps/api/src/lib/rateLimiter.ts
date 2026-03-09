@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { usageBuckets } from "../db/schema";
-import { MODEL_CATALOG, TIER_CONFIG } from "@app/shared";
+import { MODEL_CATALOG, TIER_CONFIG, MARKUP } from "@app/shared";
 
 // "team" is an internal tier not in the product TIER_CONFIG
-const TEAM_LIMITS = { windowCapacity: 40, overageCapacity: 400 } as const;
+const TEAM_LIMITS = { windowCapacity: 140, overageCapacity: 700 } as const;
 
 const WINDOW_DURATION_MS = TIER_CONFIG.free.windowDurationMs;
 
@@ -22,14 +22,35 @@ const MODEL_POINT_COSTS: Record<string, number> = Object.fromEntries(
   MODEL_CATALOG.map(m => [m.id, m.pointCostEstimate])
 );
 
-const DEFAULT_POINT_COST = 1;
+const DEFAULT_POINT_COST = 0.5; // 0.5 cents fallback for unknown models
 
 export function getPointCost(model: string): number {
   return MODEL_POINT_COSTS[model] ?? DEFAULT_POINT_COST;
 }
 
+/**
+ * Calculate the actual cost in cents (1 point = 1 cent) based on real token usage.
+ * Applies the MARKUP multiplier.
+ */
+export function getActualCostCents(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+): number {
+  const modelData = MODEL_CATALOG.find(m => m.id === model);
+  if (!modelData) return DEFAULT_POINT_COST;
+
+  const inputPricePerToken = modelData.inputPricePer1M / 1_000_000;
+  const outputPricePerToken = modelData.outputPricePer1M / 1_000_000;
+  const costDollars =
+    inputTokens * inputPricePerToken +
+    outputTokens * outputPricePerToken;
+  const costCents = costDollars * 100 * MARKUP;
+  return Math.round(costCents * 100) / 100; // round to 2 decimal places
+}
+
 type RateLimitResult =
-  | { allowed: true; windowRemaining: number; overageRemaining: number; totalCapacity: number }
+  | { allowed: true; windowRemaining: number; overageRemaining: number; totalCapacity: number; reservedCost: number }
   | { allowed: false; retryAfterMs: number };
 
 export async function checkAndDeduct(
@@ -104,7 +125,59 @@ export async function checkAndDeduct(
     windowRemaining,
     overageRemaining,
     totalCapacity: limits.windowCapacity + limits.overageCapacity,
+    reservedCost: cost,
   };
+}
+
+/**
+ * Settle the actual cost after a response completes.
+ * Credits back unused reserved amount or deducts additional if actual > reserved.
+ */
+export async function settleUsage(
+  userId: string,
+  reservedCost: number,
+  actualCost: number,
+): Promise<void> {
+  const diff = actualCost - reservedCost; // positive = need to deduct more, negative = credit back
+
+  if (Math.abs(diff) < 0.01) return; // no meaningful difference
+
+  const bucket = await db.query.usageBuckets.findFirst({
+    where: eq(usageBuckets.userId, userId),
+  });
+
+  if (!bucket) return;
+
+  let windowRemaining = bucket.windowRemaining;
+  let overageRemaining = bucket.overageRemaining;
+
+  if (diff < 0) {
+    // Credit back: add to window first (up to capacity), then overage
+    const credit = Math.abs(diff);
+    const windowSpace = bucket.windowCapacity - windowRemaining;
+    const windowCredit = Math.min(credit, windowSpace);
+    windowRemaining += windowCredit;
+    overageRemaining += credit - windowCredit;
+    // Cap overage at capacity
+    overageRemaining = Math.min(overageRemaining, bucket.overageCapacity);
+  } else {
+    // Deduct more: from window first, then overage
+    if (windowRemaining >= diff) {
+      windowRemaining -= diff;
+    } else {
+      const spillover = diff - windowRemaining;
+      windowRemaining = 0;
+      overageRemaining = Math.max(0, overageRemaining - spillover);
+    }
+  }
+
+  await db.update(usageBuckets)
+    .set({
+      windowRemaining,
+      overageRemaining,
+      updatedAt: new Date(),
+    })
+    .where(eq(usageBuckets.userId, userId));
 }
 
 export async function getUsageStatus(userId: string, tier: Tier) {

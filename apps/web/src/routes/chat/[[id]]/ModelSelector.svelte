@@ -67,6 +67,7 @@
 	<Popover.Content
 		class="border-reflect w-[500px] overflow-hidden bg-emerald-50 p-0 dark:border-zinc-800 dark:bg-zinc-950"
 		align="start"
+		side="top"
 		sideOffset={8}
 		dir={localeStore.dir}
 	>
@@ -110,7 +111,7 @@
 			</div>
 		</div>
 
-		<div class="flex h-[300px]">
+		<div class="flex h-[250px]">
 			<!-- Sidebar -->
 			<div
 				class="no-scrollbar flex w-12 flex-col items-center gap-2 overflow-x-hidden overflow-y-auto border-r border-emerald-100/50 bg-background/30 py-2 dark:border-zinc-800/50"
@@ -185,7 +186,7 @@
 									</span>
 								</div>
 								<div
-									class="ml-auto flex items-center gap-0.5 rounded-full bg-muted-foreground/8 p-0.75"
+									class=" ms-auto flex items-center gap-0.5 rounded-full bg-muted-foreground/8 p-0.75"
 								>
 									{#if m.supportsImages}
 										<Tooltip.Root>
