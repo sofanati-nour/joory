@@ -42,17 +42,8 @@
 	);
 
 	// User subscription logic
-	let isPremium = $derived(userState.subscription?.subscription === 'paid');
-	let currentModel = $derived($models.find((m) => m.id === inputState.model));
-	let currentTier = $derived(
-		currentModel?.tier === 'ultra' || currentModel?.tier === 'premium' ? 'premium' : 'standard'
-	);
-	let remainingCredits = $derived.by(() => {
-		if (!userState.subscription) return 100;
-		return currentTier === 'premium'
-			? userState.subscription.premium
-			: userState.subscription.standard;
-	});
+	let isPremium = $derived(userState.tier === 'pro');
+	let remainingCredits = $derived(userState.usage?.totalRemaining ?? 100);
 
 	$effect(() => {
 		isAlertVisible = remainingCredits < 10;
@@ -74,16 +65,17 @@
 		// Store original state for rollback on error
 		const originalText = inputState.text;
 		const originalFiles = [...inputState.attachedFiles];
-		const originalSubscription = userState.subscription ? { ...userState.subscription } : null;
+		const originalUsage = userState.usage ? { ...userState.usage } : null;
 
 		try {
 			// Optimistic credit update
-			if (userState.subscription) {
-				if (currentTier === 'premium') {
-					userState.subscription.premium = Math.max(0, userState.subscription.premium - 1);
+			if (userState.usage) {
+				if (userState.usage.windowRemaining > 0) {
+					userState.usage.windowRemaining = Math.max(0, userState.usage.windowRemaining - 1);
 				} else {
-					userState.subscription.standard = Math.max(0, userState.subscription.standard - 1);
+					userState.usage.overageRemaining = Math.max(0, userState.usage.overageRemaining - 1);
 				}
+				userState.usage.totalRemaining = Math.max(0, userState.usage.totalRemaining - 1);
 			}
 
 			// Prepare files
@@ -121,8 +113,8 @@
 			// Rollback on error
 			inputState.text = originalText;
 			inputState.attachedFiles = originalFiles;
-			if (originalSubscription && userState.subscription) {
-				userState.subscription = originalSubscription;
+			if (originalUsage && userState.usage) {
+				userState.usage = originalUsage;
 			}
 
 			// TODO: Show user-friendly error toast
@@ -212,7 +204,7 @@
 		<div class="relative mx-auto flex w-full max-w-3xl flex-col text-center">
 			<div class="pointer-events-auto">
 				<!-- Low Credits Warning -->
-				<LowCreditsAlert {remainingCredits} {currentTier} />
+				<LowCreditsAlert {remainingCredits} currentTier="standard" />
 
 				<!-- File Error Alert -->
 				{#if fileError}

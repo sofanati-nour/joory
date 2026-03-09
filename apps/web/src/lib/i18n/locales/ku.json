@@ -88,11 +88,13 @@
 	},
 	"usage": {
 		"title": "Bikaranîna peyaman",
-		"resetsIn": "Kredî {time} nûve dibin",
-		"standardCredits": "Krediyên standard",
-		"premiumCredits": "Krediyên premium",
-		"remainingStandard": "{count} peyamên standard mayî ne",
-		"remainingPremium": "{count} peyamên premium mayî ne",
+		"windowResetsIn": "Pencere {time} nûve dibe",
+		"overageResetsIn": "Hewza mehane {time} nûve dibe",
+		"windowBucket": "Pencereya 4 saetan",
+		"overageBucket": "Hewza mehane",
+		"remaining": "{count} mayî ne",
+		"overallUsage": "Bikaranîna giştî",
+		"percentRemaining": "%{percent} mayî ne",
 		"toolUsageNote": "Her bikaranîna amûrekê (wek lêgerîna malperê) di bersivekê de krediyên zêde dixe. Model her gav amûrên çalak nayên bikar anîn.",
 		"cheatCodeSuccess": "Pîroz be! Pênc xal hatin zêdekirin"
 	},

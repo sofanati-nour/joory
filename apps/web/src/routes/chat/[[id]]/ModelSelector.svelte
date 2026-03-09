@@ -24,7 +24,7 @@
 
 	let searchModel = $state('');
 	let selectedProvider = $state('all');
-	let isPremium = $derived(userState.subscription?.subscription === 'paid');
+	let isPremium = $derived(userState.tier === 'pro');
 	let isPopoverOpen = $state(false);
 
 	type ProviderInfo = { icon: any; label: string };
@@ -70,7 +70,7 @@
 		sideOffset={8}
 		dir={localeStore.dir}
 	>
-		{#if userState.subscription?.subscription === 'free'}
+		{#if userState.tier === 'free'}
 			<!-- Upgrade Banner -->
 			<div
 				class="flex items-center justify-between border-b border-emerald-100 bg-linear-to-r from-emerald-100/80 to-purple-100/50 p-3 dark:border-zinc-800 dark:from-emerald-950/20 dark:to-purple-900/20"

@@ -118,12 +118,14 @@ export async function getUsageStatus(userId: string, tier: Tier) {
   if (!bucket) {
     return {
       windowRemaining: limits.windowCapacity,
+      windowCapacity: limits.windowCapacity,
       overageRemaining: limits.overageCapacity,
+      overageCapacity: limits.overageCapacity,
       totalRemaining: limits.windowCapacity + limits.overageCapacity,
       totalCapacity: limits.windowCapacity + limits.overageCapacity,
       percentRemaining: 100,
-      windowResetsAt: new Date(now.getTime() + WINDOW_DURATION_MS),
-      overageResetsAt: getNextMonthStart(now),
+      windowResetsAt: new Date(now.getTime() + WINDOW_DURATION_MS).toISOString(),
+      overageResetsAt: getNextMonthStart(now).toISOString(),
     };
   }
 
@@ -140,16 +142,18 @@ export async function getUsageStatus(userId: string, tier: Tier) {
 
   return {
     windowRemaining,
+    windowCapacity: limits.windowCapacity,
     overageRemaining,
+    overageCapacity: limits.overageCapacity,
     totalRemaining,
     totalCapacity,
     percentRemaining: Math.round((totalRemaining / totalCapacity) * 100),
-    windowResetsAt: now >= bucket.windowResetsAt
+    windowResetsAt: (now >= bucket.windowResetsAt
       ? new Date(now.getTime() + WINDOW_DURATION_MS)
-      : bucket.windowResetsAt,
-    overageResetsAt: now >= bucket.overageResetsAt
+      : bucket.windowResetsAt).toISOString(),
+    overageResetsAt: (now >= bucket.overageResetsAt
       ? getNextMonthStart(now)
-      : bucket.overageResetsAt,
+      : bucket.overageResetsAt).toISOString(),
   };
 }
 

@@ -88,11 +88,13 @@
 	},
 	"usage": {
 		"title": "Mesaj Kullanımı",
-		"resetsIn": "Krediler {time} yenilenir",
-		"standardCredits": "Standart Krediler",
-		"premiumCredits": "Premium Krediler",
-		"remainingStandard": "{count} standart mesaj kaldı",
-		"remainingPremium": "{count} premium mesaj kaldı",
+		"windowResetsIn": "Pencere {time} yenilenir",
+		"overageResetsIn": "Aylık havuz {time} yenilenir",
+		"windowBucket": "4 Saatlik Pencere",
+		"overageBucket": "Aylık Havuz",
+		"remaining": "{count} kaldı",
+		"overallUsage": "Genel Kullanım",
+		"percentRemaining": "%{percent} kaldı",
 		"toolUsageNote": "Bir yanıt sırasında her araç kullanımı (web araması gibi) ek kredi tüketir. Modeller etkinleştirilmiş araçları her zaman kullanmayabilir.",
 		"cheatCodeSuccess": "Tebrikler! Beş puan eklendi"
 	},

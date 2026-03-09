@@ -88,11 +88,13 @@
 	},
 	"usage": {
 		"title": "Utilisation des messages",
-		"resetsIn": "Réinitialisation des crédits {time}",
-		"standardCredits": "Crédits standard",
-		"premiumCredits": "Crédits premium",
-		"remainingStandard": "{count} messages standard restants",
-		"remainingPremium": "{count} messages premium restants",
+		"windowResetsIn": "La fenêtre se réinitialise {time}",
+		"overageResetsIn": "Le pool mensuel se réinitialise {time}",
+		"windowBucket": "Fenêtre de 4 heures",
+		"overageBucket": "Pool mensuel",
+		"remaining": "{count} restants",
+		"overallUsage": "Utilisation globale",
+		"percentRemaining": "{percent}% restants",
 		"toolUsageNote": "Chaque utilisation d'outil (comme la recherche web) pendant une réponse consomme des crédits supplémentaires. Les modèles n'utilisent pas toujours les outils activés.",
 		"cheatCodeSuccess": "Félicitations ! Cinq points ajoutés"
 	},

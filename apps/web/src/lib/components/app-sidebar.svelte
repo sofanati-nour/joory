@@ -176,21 +176,21 @@
 	</Sidebar.Content>
 	<Sidebar.Footer class="border-t border-sidebar-border p-4">
 		{#if user}
-			{#if userState.subscription}
+			{#if userState.usage}
 				<Button
 					variant="ghost"
 					class="h-auto w-full justify-start gap-3 px-2 py-2"
 					href="/settings/subscription"
 				>
 					<Avatar.Root class="size-8 ring-1 ring-border">
-						<Avatar.Image src={user.avatar} alt={user.name} />
+						<Avatar.Image src={user.image} alt={user.name} />
 						<Avatar.Fallback>{user.name?.charAt(0).toUpperCase() || 'U'}</Avatar.Fallback>
 					</Avatar.Root>
 
 					<div class="flex min-w-0 flex-col items-start text-sm">
 						<span class="truncate font-medium text-foreground">{user.name}</span>
 						<span class="truncate text-xs text-muted-foreground">
-							{userState.subscription?.subscription === 'paid'
+							{userState.tier === 'pro'
 								? $_('nav.paidSubscription')
 								: $_('nav.freeSubscription')}
 						</span>

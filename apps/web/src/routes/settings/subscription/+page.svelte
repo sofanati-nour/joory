@@ -10,14 +10,18 @@
 	} from '@lucide/svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { _ } from 'svelte-i18n';
-	import { userState, PLAN_LIMITS } from '$lib/stores/user.svelte';
+	import { userState } from '$lib/stores/user.svelte';
+	import { TIER_CONFIG } from '@app/shared';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
-		if (!userState.subscription) {
+		if (!userState.usage) {
 			userState.fetchSubscription();
 		}
 	});
+
+	let usage = $derived(userState.usage);
+	let tierConfig = $derived(TIER_CONFIG[userState.tier]);
 
 	const formatDate = (dateString: string) => {
 		return new Date(dateString).toLocaleDateString(undefined, {
@@ -29,7 +33,7 @@
 </script>
 
 <main class="space-y-8">
-	{#if userState.subscription?.subscription === 'paid'}
+	{#if userState.tier === 'pro'}
 		<!-- Subscribed View -->
 		<div class="space-y-6">
 			<div class="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -39,62 +43,66 @@
 					</div>
 					<div>
 						<h2 class="text-2xl font-bold">{$_('subscription.subscribedTitle')}</h2>
-						<p class="text-sm text-muted-foreground">
-							{$_('subscription.renewsOn', { values: { date: formatDate(userState.subscription.next_reset_at) } })}
-						</p>
+						{#if usage}
+							<p class="text-sm text-muted-foreground">
+								{$_('subscription.renewsOn', { values: { date: formatDate(usage.overageResetsAt) } })}
+							</p>
+						{/if}
 					</div>
 				</div>
 			</div>
 
-			<div class="grid gap-4 md:grid-cols-2">
-				<!-- Standard Credits Card -->
-				<Card.Root class="gap-0">
-					<Card.Header class="pb-2">
-						<Card.Title class="flex items-center gap-2 text-base">
-							<SparklesIcon class="h-5 w-5 text-primary" />
-							{$_('usage.standardCredits')}
-						</Card.Title>
-					</Card.Header>
-					<Card.Content>
-						<div class="flex items-end justify-between">
-							<div class="text-3xl font-bold">
-								{userState.subscription.standard}
-								<span class="text-lg font-normal text-muted-foreground">/ {PLAN_LIMITS.paid.standard}</span>
+			{#if usage}
+				<div class="grid gap-4 md:grid-cols-2">
+					<!-- Window Bucket Card -->
+					<Card.Root class="gap-0">
+						<Card.Header class="pb-2">
+							<Card.Title class="flex items-center gap-2 text-base">
+								<SparklesIcon class="h-5 w-5 text-primary" />
+								{$_('usage.windowBucket')}
+							</Card.Title>
+						</Card.Header>
+						<Card.Content>
+							<div class="flex items-end justify-between">
+								<div class="text-3xl font-bold">
+									{usage.windowRemaining}
+									<span class="text-lg font-normal text-muted-foreground">/ {usage.windowCapacity}</span>
+								</div>
 							</div>
-						</div>
-						<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
-							<div
-								class="h-full bg-primary transition-all"
-								style="width: {(userState.subscription.standard / PLAN_LIMITS.paid.standard) * 100}%"
-							></div>
-						</div>
-					</Card.Content>
-				</Card.Root>
+							<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
+								<div
+									class="h-full bg-primary transition-all"
+									style="width: {(usage.windowRemaining / usage.windowCapacity) * 100}%"
+								></div>
+							</div>
+						</Card.Content>
+					</Card.Root>
 
-				<!-- Premium Credits Card -->
-				<Card.Root class="gap-0">
-					<Card.Header class="pb-2">
-						<Card.Title class="flex items-center gap-2 text-base">
-							<GemIcon class="h-5 w-5 text-amber-500" />
-							{$_('usage.premiumCredits')}
-						</Card.Title>
-					</Card.Header>
-					<Card.Content>
-						<div class="flex items-end justify-between">
-							<div class="text-3xl font-bold">
-								{userState.subscription.premium}
-								<span class="text-lg font-normal text-muted-foreground">/ {PLAN_LIMITS.paid.premium}</span>
+					<!-- Overage Bucket Card -->
+					<Card.Root class="gap-0">
+						<Card.Header class="pb-2">
+							<Card.Title class="flex items-center gap-2 text-base">
+								<GemIcon class="h-5 w-5 text-amber-500" />
+								{$_('usage.overageBucket')}
+							</Card.Title>
+						</Card.Header>
+						<Card.Content>
+							<div class="flex items-end justify-between">
+								<div class="text-3xl font-bold">
+									{usage.overageRemaining}
+									<span class="text-lg font-normal text-muted-foreground">/ {usage.overageCapacity}</span>
+								</div>
 							</div>
-						</div>
-						<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
-							<div
-								class="h-full bg-amber-500 transition-all"
-								style="width: {(userState.subscription.premium / PLAN_LIMITS.paid.premium) * 100}%"
-							></div>
-						</div>
-					</Card.Content>
-				</Card.Root>
-			</div>
+							<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
+								<div
+									class="h-full bg-amber-500 transition-all"
+									style="width: {(usage.overageRemaining / usage.overageCapacity) * 100}%"
+								></div>
+							</div>
+						</Card.Content>
+					</Card.Root>
+				</div>
+			{/if}
 
 			<!-- Features List -->
 			<Card.Root class="gap-0 bg-card/50">
@@ -131,7 +139,7 @@
 					class="mt-2 flex flex-col items-center justify-center text-right md:mt-0 md:flex-row md:items-center md:justify-center md:text-right"
 				>
 					<div class="text-xl font-bold md:text-3xl">
-						960 SYP<span class="text-lg text-secondary-foreground">&sol;{$_('common.monthly')}</span>
+						{TIER_CONFIG.pro.priceMonthlySYP} SYP<span class="text-lg text-secondary-foreground">&sol;{$_('common.monthly')}</span>
 					</div>
 				</div>
 			</div>
@@ -159,7 +167,7 @@
 					<Card.Content>
 						<p class="text-sm text-muted-foreground/80">
 							{@html $_('subscription.generousLimitsDesc', {
-								values: { standard: '<b>1500</b>', premium: '<b>100</b>' }
+								values: { standard: `<b>${TIER_CONFIG.pro.windowCapacity}</b>`, premium: `<b>${TIER_CONFIG.pro.overageCapacity}</b>` }
 							})}
 						</p>
 					</Card.Content>

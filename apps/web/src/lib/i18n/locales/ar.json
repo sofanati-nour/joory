@@ -117,11 +117,13 @@
 	},
 	"usage": {
 		"title": "استهلاك الرسائل",
-		"resetsIn": "يتجدد الرصيد {time}",
-		"standardCredits": "رصيد عادي",
-		"premiumCredits": "رصيد مميز",
-		"remainingStandard": "متبقي {count} رسالة عادية",
-		"remainingPremium": "متبقي {count} رسالة مميزة",
+		"windowResetsIn": "تتجدد النافذة {time}",
+		"overageResetsIn": "يتجدد الرصيد الشهري {time}",
+		"windowBucket": "نافذة ٤ ساعات",
+		"overageBucket": "الرصيد الشهري",
+		"remaining": "متبقي {count}",
+		"overallUsage": "الاستهلاك الكلي",
+		"percentRemaining": "متبقي {percent}%",
 		"toolUsageNote": "كل استخدام للأدوات (مثل الاستناد إلى البحث) أثناء الرد يستهلك رصيداً إضافياً. قد لا تستخدم النماذج الأدوات المفعّلة دائماً.",
 		"cheatCodeSuccess": "مبروك! تم اضافة خمس نقاط"
 	},

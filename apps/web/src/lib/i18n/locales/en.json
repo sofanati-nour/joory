@@ -119,11 +119,13 @@
 	},
 	"usage": {
 		"title": "Message Usage",
-		"resetsIn": "Credits reset {time}",
-		"standardCredits": "Standard Credits",
-		"premiumCredits": "Premium Credits",
-		"remainingStandard": "{count} standard messages remaining",
-		"remainingPremium": "{count} premium messages remaining",
+		"windowResetsIn": "Window resets {time}",
+		"overageResetsIn": "Monthly pool resets {time}",
+		"windowBucket": "4-Hour Window",
+		"overageBucket": "Monthly Pool",
+		"remaining": "{count} remaining",
+		"overallUsage": "Overall Usage",
+		"percentRemaining": "{percent}% remaining",
 		"toolUsageNote": "Each tool usage (such as web search) during a response consumes additional credits. Models may not always use enabled tools.",
 		"cheatCodeSuccess": "Congratulations! Five points added"
 	},

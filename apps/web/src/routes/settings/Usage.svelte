@@ -5,20 +5,15 @@
 	import { Confetti } from 'svelte-confetti';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { toast } from 'svelte-sonner';
-	import { userState, PLAN_LIMITS } from '$lib/stores/user.svelte';
+	import { userState } from '$lib/stores/user.svelte';
 	import { formatRelativeTime } from '$lib/utils';
 	import { _, locale } from 'svelte-i18n';
 
-	let plan = $derived(userState.subscription?.subscription ?? 'free');
-	let limits = $derived(PLAN_LIMITS[plan]);
-	
-	let standardTotal = $derived(limits.standard);
-	let standardRemaining = $derived(userState.subscription?.standard ?? 0);
-	let standardUsed = $derived(standardTotal - standardRemaining);
+	let usage = $derived(userState.usage);
 
-	let premiumTotal = $derived(limits.premium);
-	let premiumRemaining = $derived(userState.subscription?.premium ?? 0);
-	let premiumUsed = $derived(premiumTotal - premiumRemaining);
+	let windowUsed = $derived(usage ? usage.windowCapacity - usage.windowRemaining : 0);
+	let overageUsed = $derived(usage ? usage.overageCapacity - usage.overageRemaining : 0);
+	let totalUsed = $derived(usage ? usage.totalCapacity - usage.totalRemaining : 0);
 
 	let cheatCodeActivated = $state(false);
 	let cheatCode = $state<Array<String>>([]);
@@ -54,58 +49,71 @@
 		}
 		if (cheatCode.length === cheatCodeSequence.length) {
 			cheatCodeActivated = true;
-			if (userState.subscription) {
-				userState.subscription.standard += 5;
+			if (userState.usage) {
+				userState.usage.windowRemaining += 5;
+				userState.usage.totalRemaining += 5;
 			}
 			toast.success($_('usage.cheatCodeSuccess'));
-            if(audioContainer){
-                audioContainer.play();
-            }
+			if (audioContainer) {
+				audioContainer.play();
+			}
 		}
 	};
 </script>
 
 <svelte:body onkeyup={handleCheatCode} />
 
-{#if userState.subscription}
+{#if usage}
 <audio id="congratulations" src="/contra.mp3" bind:this={audioContainer}></audio>
-
 
 <Card.Root class="w-full">
 	<Card.Header>
 		<Card.Title>{$_('usage.title')}</Card.Title>
-		<Card.Description>{$_('usage.resetsIn', { values: { time: formatRelativeTime(userState.subscription.next_reset_at, $locale ?? 'ar') } })}</Card.Description>
+		<Card.Description>
+			{$_('usage.windowResetsIn', { values: { time: formatRelativeTime(usage.windowResetsAt, $locale ?? 'ar') } })}
+			&middot;
+			{$_('usage.overageResetsIn', { values: { time: formatRelativeTime(usage.overageResetsAt, $locale ?? 'ar') } })}
+		</Card.Description>
 	</Card.Header>
 	<Card.Content>
 		<div class="flex flex-col gap-6">
-			<!-- Standard Usage -->
+			<!-- Overall combined bar -->
 			<div class="flex flex-col gap-2">
 				<div class="flex justify-between">
-					<h3 class="text-sm font-medium">{$_('usage.standardCredits')}</h3>
+					<h3 class="text-sm font-medium">{$_('usage.overallUsage')}</h3>
 					<p class="text-sm text-muted-foreground">
-						{standardUsed}/{standardTotal}
+						{$_('usage.percentRemaining', { values: { percent: Math.round(usage.percentRemaining) } })}
 						{#if cheatCodeActivated}
 							<Confetti x={[-0.5, 0.5]} y={[-0.5, 0.5]} />
 						{/if}
 					</p>
 				</div>
-				<Progress value={standardUsed} max={standardTotal} />
-				<p class="text-sm text-muted-foreground">{$_('usage.remainingStandard', { values: { count: standardRemaining } })}</p>
+				<Progress value={totalUsed} max={usage.totalCapacity} />
 			</div>
 
-			<!-- Premium Usage (Only for paid plans) -->
-			{#if plan === 'paid'}
-				<div class="flex flex-col gap-2">
-					<div class="flex justify-between">
-						<h3 class="text-sm font-medium">{$_('usage.premiumCredits')}</h3>
-						<p class="text-sm text-muted-foreground">
-							{premiumUsed}/{premiumTotal}
-						</p>
-					</div>
-					<Progress value={premiumUsed} max={premiumTotal} class="bg-primary/20" />
-					<p class="text-sm text-muted-foreground">{$_('usage.remainingPremium', { values: { count: premiumRemaining } })}</p>
+			<!-- Window bucket -->
+			<div class="flex flex-col gap-2">
+				<div class="flex justify-between">
+					<h3 class="text-sm font-medium">{$_('usage.windowBucket')}</h3>
+					<p class="text-sm text-muted-foreground">
+						{windowUsed}/{usage.windowCapacity}
+					</p>
 				</div>
-			{/if}
+				<Progress value={windowUsed} max={usage.windowCapacity} />
+				<p class="text-sm text-muted-foreground">{$_('usage.remaining', { values: { count: usage.windowRemaining } })}</p>
+			</div>
+
+			<!-- Overage bucket -->
+			<div class="flex flex-col gap-2">
+				<div class="flex justify-between">
+					<h3 class="text-sm font-medium">{$_('usage.overageBucket')}</h3>
+					<p class="text-sm text-muted-foreground">
+						{overageUsed}/{usage.overageCapacity}
+					</p>
+				</div>
+				<Progress value={overageUsed} max={usage.overageCapacity} class="bg-primary/20" />
+				<p class="text-sm text-muted-foreground">{$_('usage.remaining', { values: { count: usage.overageRemaining } })}</p>
+			</div>
 		</div>
 	</Card.Content>
 	<Card.Footer>

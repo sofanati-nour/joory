@@ -50,7 +50,7 @@
 				<div class="relative flex flex-col items-center">
 					<Avatar.Root class="size-40">
 						<Avatar.Image
-							src={user.avatar}
+							src={user.image}
 						/>
 					</Avatar.Root>
 					<h1 class="mt-4 text-2xl font-bold whitespace-nowrap transition-opacity duration-200">
@@ -75,14 +75,10 @@
 						</span>
 					</button>
 					<Badge variant="outline">
-						{#if userState.subscription}
-							{#if userState.subscription.subscription === 'free'}
-								{$_('nav.freeSubscription')}
-							{:else if userState.subscription.subscription === 'paid'}
-								{$_('nav.paidSubscription')}
-							{/if}
+						{#if userState.tier === 'pro'}
+							{$_('nav.paidSubscription')}
 						{:else}
-							<Spinner/>
+							{$_('nav.freeSubscription')}
 						{/if}
 					</Badge>
 

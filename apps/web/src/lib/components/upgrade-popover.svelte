@@ -7,7 +7,7 @@
 
 	let { children } = $props();
 
-	let isPremium = $derived(userState.subscription?.subscription === 'paid');
+	let isPremium = $derived(userState.tier === 'pro');
 </script>
 
 {#if isPremium}
