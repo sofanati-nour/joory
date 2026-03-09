@@ -10,8 +10,8 @@ import { checkAndDeduct } from "../lib/rateLimiter";
 import type { ChatStreamEvent } from "@app/shared";
 import { MODEL_MAP } from "@app/shared";
 import { fetchSanaFeedTool } from "../tools/fetchSanaFeed";
-import { fetchSpTodayTool } from "src/tools/fetchSpToday";
-import { fetchAlikhbariaFeedTool } from "src/tools/fetchAlikhbariaFeed";
+import { fetchSpTodayTool } from "../tools/fetchSpToday";
+import { fetchAlikhbariaFeedTool } from "../tools/fetchAlikhbariaFeed";
 import {
   getVerseTool,
   getVersesByChapterTool,
@@ -49,6 +49,10 @@ app.post("/", async (c) => {
 
   if (!model) {
     return c.json({ error: "Model is required" }, 400);
+  }
+
+  if (!MODEL_MAP[model]) {
+    return c.json({ error: "Unsupported model" }, 400);
   }
 
   const rateLimitResult = await checkAndDeduct(user.id, user.tier, model);
@@ -97,16 +101,28 @@ app.post("/", async (c) => {
 
   const parentMessageId = conversation.activeLeafId ?? null;
 
-  const [[userMessage], messageHistory] = await Promise.all([
-    db.insert(messages).values({
-      conversationId,
-      parentId: parentMessageId,
-      role: "user",
-      content: message,
-      siblingIndex: 0,
-    }).returning(),
+  const [siblingCountResult, messageHistory] = await Promise.all([
+    db.execute(sql`
+      SELECT COUNT(*) AS count FROM messages
+      WHERE conversation_id = ${conversationId}
+        AND parent_id ${parentMessageId ? sql`= ${parentMessageId}` : sql`IS NULL`}
+    `),
     getMessageHistory(conversationId, parentMessageId),
   ]);
+
+  const userSiblingIndex = Number((siblingCountResult as any[])[0]?.count ?? 0);
+
+  const [userMessage] = await db.insert(messages).values({
+    conversationId,
+    parentId: parentMessageId,
+    role: "user",
+    content: message,
+    siblingIndex: userSiblingIndex,
+  }).returning();
+
+  await db.update(conversations)
+    .set({ activeLeafId: userMessage.id })
+    .where(eq(conversations.id, conversationId));
 
   const modelMeta = MODEL_MAP[model];
 
@@ -144,90 +160,99 @@ app.post("/", async (c) => {
 
   return streamSSE(c, async (stream) => {
     let fullContent = "";
-    let streamDone = false;
+    let finishReason = "stop";
 
-    while (!streamDone) {
+    try {
+      const { fullStream, usage } = streamText({
+        model: openrouter(model),
+        messages: chatMessages,
+        ...(modelMeta?.supportsTools && {
+          tools: {
+            fetchSanaFeed: fetchSanaFeedTool,
+            fetchSpToday: fetchSpTodayTool,
+            fetchAlikhbariaFeed: fetchAlikhbariaFeedTool,
+            // quranGetVerse: getVerseTool,
+            // quranGetVersesByChapter: getVersesByChapterTool,
+            // quranGetRandomVerse: getRandomVerseTool,
+            // quranListChapters: listChaptersTool,
+            // quranGetChapter: getChapterTool,
+            // quranGetChapterInfo: getChapterInfoTool,
+            // quranSearch: searchQuranTool,
+            // quranListTranslations: listTranslationsTool,
+            // quranListJuzs: listJuzsTool,
+          },
+          maxSteps: 5,
+        }),
+      });
 
-      try {
-        const { fullStream, usage } = streamText({
-          model: openrouter(model),
-          messages: chatMessages,
-          ...(modelMeta?.supportsTools && {
-            tools: {
-              fetchSanaFeed: fetchSanaFeedTool,
-              fetchSpToday: fetchSpTodayTool,
-              fetchAlikhbariaFeed: fetchAlikhbariaFeedTool,
-              quranGetVerse: getVerseTool,
-              quranGetVersesByChapter: getVersesByChapterTool,
-              quranGetRandomVerse: getRandomVerseTool,
-              quranListChapters: listChaptersTool,
-              quranGetChapter: getChapterTool,
-              quranGetChapterInfo: getChapterInfoTool,
-              quranSearch: searchQuranTool,
-              quranListTranslations: listTranslationsTool,
-              quranListJuzs: listJuzsTool,
-            },
-            maxSteps: 5,
-          }),
-        });
-
-        for await (const part of fullStream) {
-          await stream.writeSSE({ data: JSON.stringify(part) });
-          if (part.type === "text-delta") {
-            fullContent += part.textDelta;
-          }
+      for await (const part of fullStream) {
+        await stream.writeSSE({ data: JSON.stringify(part) });
+        if (part.type === "text-delta") {
+          fullContent += part.textDelta;
+        } else if (part.type === "finish") {
+          finishReason = part.finishReason ?? "stop";
         }
+      }
 
-        // Title ran concurrently — resolve and send before finish so the client
-        // receives it before the stream closes
-        if (titlePromise) {
+      // Title ran concurrently — resolve and send before finish so the client
+      // receives it before the stream closes
+      if (titlePromise) {
+        try {
           const resolvedTitle = await titlePromise;
           await db.update(conversations)
             .set({ title: resolvedTitle })
             .where(eq(conversations.id, conversationId));
           await send(stream, { type: "title", value: resolvedTitle });
+        } catch (err) {
+          console.error("Title generation failed:", err);
         }
-
-        await send(stream, { type: "finish", finishReason: "stop" });
-
-        if (fullContent) {
-          const durationMs = Date.now() - startTime;
-
-          const awaitedUsage = await usage;
-          const [assistantMessage] = await db.insert(messages).values({
-            conversationId,
-            parentId: userMessageId,
-            role: "assistant",
-            content: fullContent,
-            model,
-            inputTokens: awaitedUsage?.promptTokens ?? 0,
-            outputTokens: awaitedUsage?.completionTokens ?? 0,
-            durationMs,
-            siblingIndex: 0,
-          }).returning();
-
-          await db.update(conversations)
-            .set({
-              activeLeafId: assistantMessage.id,
-              updatedAt: new Date(),
-            })
-            .where(eq(conversations.id, conversationId));
-        }
-      } catch (error) {
-        console.error("Chat error:", error instanceof Error ? error.stack : error);
-        await send(stream, {
-          type: "error",
-          message: error instanceof Error ? error.message : "An error occurred",
-        });
-      } finally {
-        streamDone = true;
-        await stream.close();
       }
+
+      await send(stream, { type: "finish", finishReason });
+
+      if (fullContent) {
+        const durationMs = Date.now() - startTime;
+
+        const assistantSiblingCount = await db.execute(sql`
+          SELECT COUNT(*) AS count FROM messages
+          WHERE conversation_id = ${conversationId}
+            AND parent_id = ${userMessageId}
+        `);
+        const assistantSiblingIndex = Number((assistantSiblingCount as any[])[0]?.count ?? 0);
+
+        const awaitedUsage = await usage;
+        const [assistantMessage] = await db.insert(messages).values({
+          conversationId,
+          parentId: userMessageId,
+          role: "assistant",
+          content: fullContent,
+          model,
+          inputTokens: awaitedUsage?.promptTokens ?? 0,
+          outputTokens: awaitedUsage?.completionTokens ?? 0,
+          durationMs,
+          siblingIndex: assistantSiblingIndex,
+        }).returning();
+
+        await db.update(conversations)
+          .set({
+            activeLeafId: assistantMessage.id,
+            updatedAt: new Date(),
+          })
+          .where(eq(conversations.id, conversationId));
+      }
+    } catch (error) {
+      console.error("Chat error:", error instanceof Error ? error.stack : error);
+      await send(stream, {
+        type: "error",
+        message: error instanceof Error ? error.message : "An error occurred",
+      });
+    } finally {
+      await stream.close();
     }
   });
 });
 
-app.post("/:id", async (c) => {
+app.get("/:id", async (c) => {
   const user = c.get("user");
   const conversationId = c.req.param("id");
 
@@ -316,7 +341,7 @@ async function generateTitle(firstMessage: string, model: string): Promise<strin
       </chat_history>`;
   try {
     const result = await generateText({
-      model: openrouter("google/gemini-3-flash-preview"),
+      model: openrouter("google/gemini-3.1-flash-lite-preview"),
       messages: [
         {
           role: "system",

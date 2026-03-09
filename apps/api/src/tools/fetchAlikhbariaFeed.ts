@@ -1,5 +1,4 @@
-import { tool } from "ai";
-import { z } from "zod";
+import { tool, jsonSchema } from "ai";
 import { parseRssFeed, formatRssFeedAsMarkdown } from "./parseRssFeed";
 
 /**
@@ -9,7 +8,7 @@ import { parseRssFeed, formatRssFeedAsMarkdown } from "./parseRssFeed";
 export const fetchAlikhbariaFeedTool = tool({
   description:
     "Fetch the latest news headlines and articles from Alikhbaria (alikhbariah.com). Use this when the user asks about news from Syria or current events in Syria.",
-  parameters: z.object({}),
+  parameters: jsonSchema({ type: "object", properties: {}, additionalProperties: false }),
   execute: async () => {
     const response = await fetch("https://alikhbariah.com/feed/");
     if (!response.ok) {
