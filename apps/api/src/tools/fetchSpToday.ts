@@ -1,5 +1,4 @@
-import { tool } from "ai";
-import { z } from "zod";
+import { tool, jsonSchema } from "ai";
 
 /**
  * AI SDK tool that fetches the currency exchange rate for the Syrian pound.
@@ -7,10 +6,10 @@ import { z } from "zod";
  */
 export const fetchSpTodayTool = tool({
     description:
-        "Fetch the latest currency exchange rate for the Syrian pound. Use this when the user asks about the currency exchange rate.",
-    parameters: z.object({}),
+        "Fetch the latest currency exchange rate for the Syrian pound. Use this when the user asks about the currency exchange rate. (only output the table please, no links)",
+    parameters: jsonSchema({ type: "object", properties: {}, additionalProperties: false }),
     execute: async () => {
-        const response = await fetch("https://api-v2.sp-today.com/api/v1/overview?lang=ar&city=damascus");
+        const response = await fetch("https://markdown.new/https://sp-today.com/currencies");
         if (!response.ok) {
             throw new Error(`Failed to fetch SP feed: ${response.status}`);
         }

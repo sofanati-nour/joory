@@ -247,11 +247,8 @@ export const loadChat = async (chatID: string) => {
 	chatId.set(chatID);
 
 	const response = await fetch(`${API_BASE}/api/chat/${chatID}`, {
-		method: 'POST',
+		method: 'GET',
 		credentials: 'include',
-		headers: {
-			'Content-Type': 'application/json'
-		}
 	});
 
 	if (!response.ok) {
