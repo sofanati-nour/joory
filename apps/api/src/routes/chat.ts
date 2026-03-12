@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { authMiddleware, type UserWithTier } from "../middleware/auth";
+import { logger } from "../lib/logger";
 import { db } from "../db";
 import { conversations, messages } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
@@ -29,6 +30,13 @@ type Env = {
     user: UserWithTier;
   };
 };
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidUUID(id: string): boolean {
+  return UUID_RE.test(id);
+}
 
 const app = new Hono<Env>();
 
@@ -74,6 +82,9 @@ app.post("/", async (c) => {
   let titlePromise: Promise<string> | undefined;
 
   if (chatId) {
+    if (!isValidUUID(chatId)) {
+      return c.json({ error: "Invalid conversation ID" }, 400);
+    }
     const found = await db.query.conversations.findFirst({
       where: and(
         eq(conversations.id, chatId),
@@ -204,7 +215,7 @@ app.post("/", async (c) => {
             .where(eq(conversations.id, conversationId));
           await send(stream, { type: "title", value: resolvedTitle });
         } catch (err) {
-          console.error("Title generation failed:", err);
+          logger.error("title_generation_failed", err);
         }
       }
 
@@ -248,10 +259,10 @@ app.post("/", async (c) => {
         await settleUsage(user.id, rateLimitResult.reservedCost, actualCost);
       }
     } catch (error) {
-      console.error("Chat error:", error instanceof Error ? error.stack : error);
+      logger.error("chat_stream_error", error);
       await send(stream, {
         type: "error",
-        message: error instanceof Error ? error.message : "An error occurred",
+        message: "An error occurred while processing your request",
       });
     } finally {
       await stream.close();
@@ -262,6 +273,10 @@ app.post("/", async (c) => {
 app.get("/:id", async (c) => {
   const user = c.get("user");
   const conversationId = c.req.param("id");
+
+  if (!isValidUUID(conversationId)) {
+    return c.json({ error: "Invalid conversation ID" }, 400);
+  }
 
   const conversation = await db.query.conversations.findFirst({
     where: and(
@@ -359,13 +374,10 @@ async function generateTitle(firstMessage: string, model: string): Promise<strin
     });
 
     const title = JSON.parse(result.text).title;
-    console.log("Title:", title);
     return title.trim().slice(0, 100);
   } catch (error) {
-    console.error("Error generating title:", error);
+    logger.error("title_generation_error", error);
     return firstMessage.slice(0, 50) + (firstMessage.length > 50 ? "..." : "");
-  } finally {
-    console.log("Title generation completed");
   }
 }
 

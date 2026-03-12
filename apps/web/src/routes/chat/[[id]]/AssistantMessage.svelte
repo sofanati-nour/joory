@@ -172,7 +172,9 @@
 		while ((match = linkRe.exec(msg.content)) !== null) {
 			const url = match[1] ?? match[0];
 			try {
-				new URL(url);
+				const parsed = new URL(url);
+				// Only allow safe web protocols — reject javascript:, data:, etc.
+				if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') continue;
 				urls.add(url);
 				if (urls.size >= 5) break;
 			} catch {

@@ -2,6 +2,31 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db";
 
+const isProduction = process.env.NODE_ENV === "production";
+
+function getAllowedOrigins(): string[] {
+  if (process.env.ALLOWED_ORIGINS) {
+    return process.env.ALLOWED_ORIGINS.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  if (!isProduction) {
+    return ["http://localhost:5173", "http://localhost:4173"];
+  }
+  return [];
+}
+
+// Only enable Google OAuth when both credentials are explicitly provided
+const googleProvider =
+  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ? {
+        google: {
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        },
+      }
+    : undefined;
+
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
   basePath: "/api/auth",
@@ -11,19 +36,22 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+  ...(googleProvider && { socialProviders: googleProvider }),
+  secret: process.env.BETTER_AUTH_SECRET!,
+  session: {
+    expiresIn: 60 * 60 * 24 * 30, // 30 days
+    updateAge: 60 * 60 * 24, // re-issue session token once per day
+  },
+  trustedOrigins: getAllowedOrigins(),
+  advanced: {
+    cookiePrefix: "joory",
+    defaultCookieAttributes: {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
     },
   },
-  secret: process.env.BETTER_AUTH_SECRET!,
-  trustedOrigins: [
-    "http://localhost:5173",
-    "http://localhost:4173",
-    "http://chat.syrian.test",
-    "http://joory.test",
-  ],
 });
 
 export type Auth = typeof auth;

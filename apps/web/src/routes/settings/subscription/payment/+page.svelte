@@ -8,6 +8,9 @@
 	import { _ } from 'svelte-i18n';
 	import { toast } from 'svelte-sonner';
 	import QRCode from 'qrcode';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	interface PaymentIntent {
 		id: string;
@@ -26,9 +29,8 @@
 
 	// Format ShamCash address with payment code
 	$effect(() => {
-		if (paymentIntent) {
-			const shamcashAddress = `a69459250969583a20a68b82970ec080`;
-			generateQRCode(shamcashAddress);
+		if (paymentIntent && data.shamcashAddress) {
+			generateQRCode(data.shamcashAddress);
 		}
 	});
 

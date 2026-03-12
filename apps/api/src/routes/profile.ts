@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import { authMiddleware, type UserWithTier } from "../middleware/auth";
 import { db } from "../db";
 import { userProfiles } from "../db/schema";
@@ -9,6 +10,13 @@ type Env = {
     user: UserWithTier;
   };
 };
+
+const updateProfileSchema = z.object({
+  name: z.string().max(255).optional(),
+  occupation: z.string().max(255).optional(),
+  traits: z.array(z.string().max(100)).max(20).optional(),
+  other: z.string().max(1000).optional(),
+});
 
 const app = new Hono<Env>();
 
@@ -22,11 +30,14 @@ app.get("/", async (c) => {
   });
 
   if (!profile) {
-    const [newProfile] = await db.insert(userProfiles).values({
-      userId: user.id,
-      displayName: user.name ?? null,
-    }).returning();
-    
+    const [newProfile] = await db
+      .insert(userProfiles)
+      .values({
+        userId: user.id,
+        displayName: user.name ?? null,
+      })
+      .returning();
+
     return c.json({
       name: newProfile.displayName ?? "",
       occupation: "",
@@ -45,19 +56,31 @@ app.get("/", async (c) => {
 
 app.post("/", async (c) => {
   const user = c.get("user");
-  const body = await c.req.json();
 
-  const name = body.name as string | undefined;
-  const occupation = body.occupation as string | undefined;
-  const traits = body.traits as string[] | undefined;
-  const other = body.other as string | undefined;
+  let rawBody: unknown;
+  try {
+    rawBody = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const result = updateProfileSchema.safeParse(rawBody);
+  if (!result.success) {
+    return c.json(
+      { error: "Invalid request", details: result.error.flatten().fieldErrors },
+      400
+    );
+  }
+
+  const { name, occupation, traits, other } = result.data;
 
   const existing = await db.query.userProfiles.findFirst({
     where: eq(userProfiles.userId, user.id),
   });
 
   if (existing) {
-    await db.update(userProfiles)
+    await db
+      .update(userProfiles)
       .set({
         displayName: name ?? existing.displayName,
       })

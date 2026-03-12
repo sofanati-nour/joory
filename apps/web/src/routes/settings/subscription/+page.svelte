@@ -166,8 +166,11 @@
 					</Card.Header>
 					<Card.Content>
 						<p class="text-sm text-muted-foreground/80">
-							{@html $_('subscription.generousLimitsDesc', {
-								values: { standard: `<b>${TIER_CONFIG.pro.windowCapacity}</b>`, premium: `<b>${TIER_CONFIG.pro.overageCapacity}</b>` }
+							{$_('subscription.generousLimitsDesc', {
+								values: {
+									standard: String(TIER_CONFIG.pro.windowCapacity),
+									premium: String(TIER_CONFIG.pro.overageCapacity)
+								}
 							})}
 						</p>
 					</Card.Content>

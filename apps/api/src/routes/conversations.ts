@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import { authMiddleware, type UserWithTier } from "../middleware/auth";
 import { db } from "../db";
 import { conversations } from "../db/schema";
@@ -9,6 +10,17 @@ type Env = {
     user: UserWithTier;
   };
 };
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidUUID(id: string): boolean {
+  return UUID_RE.test(id);
+}
+
+const pinSchema = z.object({
+  is_pinned: z.boolean(),
+});
 
 const app = new Hono<Env>();
 
@@ -32,18 +44,24 @@ app.post("/", async (c) => {
     },
   });
 
-  return c.json(allConversations.map(c => ({
-    id: c.id,
-    title: c.title,
-    created_at: c.createdAt,
-    updated_at: c.updatedAt,
-    is_pinned: c.isPinned,
-  })));
+  return c.json(
+    allConversations.map((c) => ({
+      id: c.id,
+      title: c.title,
+      created_at: c.createdAt,
+      updated_at: c.updatedAt,
+      is_pinned: c.isPinned,
+    }))
+  );
 });
 
 app.delete("/:id", async (c) => {
   const user = c.get("user");
   const conversationId = c.req.param("id");
+
+  if (!isValidUUID(conversationId)) {
+    return c.json({ error: "Invalid conversation ID" }, 400);
+  }
 
   const conversation = await db.query.conversations.findFirst({
     where: and(
@@ -56,7 +74,8 @@ app.delete("/:id", async (c) => {
     return c.json({ error: "Conversation not found" }, 404);
   }
 
-  await db.update(conversations)
+  await db
+    .update(conversations)
     .set({ isArchived: true, updatedAt: new Date() })
     .where(eq(conversations.id, conversationId));
 
@@ -66,8 +85,27 @@ app.delete("/:id", async (c) => {
 app.put("/:id/pin", async (c) => {
   const user = c.get("user");
   const conversationId = c.req.param("id");
-  const body = await c.req.json();
-  const isPinned = body.is_pinned as boolean;
+
+  if (!isValidUUID(conversationId)) {
+    return c.json({ error: "Invalid conversation ID" }, 400);
+  }
+
+  let rawBody: unknown;
+  try {
+    rawBody = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const result = pinSchema.safeParse(rawBody);
+  if (!result.success) {
+    return c.json(
+      { error: "Invalid request", details: result.error.flatten().fieldErrors },
+      400
+    );
+  }
+
+  const { is_pinned: isPinned } = result.data;
 
   const conversation = await db.query.conversations.findFirst({
     where: and(
@@ -80,7 +118,8 @@ app.put("/:id/pin", async (c) => {
     return c.json({ error: "Conversation not found" }, 404);
   }
 
-  await db.update(conversations)
+  await db
+    .update(conversations)
     .set({ isPinned, updatedAt: new Date() })
     .where(eq(conversations.id, conversationId));
 

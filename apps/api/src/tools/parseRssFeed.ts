@@ -1,3 +1,7 @@
+import { XMLParser } from "fast-xml-parser";
+
+const MAX_XML_SIZE = 2 * 1024 * 1024; // 2 MB — generous but bounded
+
 type RssItem = {
   title: string;
   link: string;
@@ -5,44 +9,96 @@ type RssItem = {
   image: string | null;
 };
 
-function extractTag(xml: string, tag: string): string {
-  const match = xml.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
-  return (match?.[1] ?? match?.[2] ?? "").trim();
+/**
+ * Coerce a fast-xml-parser value to a plain string.
+ * Handles: plain string, number, CDATA wrapper { __cdata: "..." },
+ * and Atom <link href="..."> objects { @_href: "..." }.
+ */
+function getText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    if ("__cdata" in obj) return String(obj.__cdata ?? "");
+    if ("@_href" in obj) return String(obj["@_href"] ?? "");
+  }
+  return "";
 }
 
-function extractAttr(xml: string, tag: string, attr: string): string | null {
-  const match = xml.match(new RegExp(`<${tag}[^>]*\\s${attr}=["']([^"']+)["']`, "i"));
-  return match?.[1] ?? null;
-}
+const parser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: "@_",
+  cdataPropName: "__cdata",
+  trimValues: true,
+  // Ensure <item> and <entry> are always arrays, even when only one exists
+  isArray: (name) => name === "item" || name === "entry",
+  allowBooleanAttributes: true,
+});
 
 export function parseRssFeed(xml: string): RssItem[] {
-  const items: RssItem[] = [];
-  const itemRegex = /<item[\s>]([\s\S]*?)<\/item>/gi;
-  let match: RegExpExecArray | null;
+  const safeXml = xml.length > MAX_XML_SIZE ? xml.slice(0, MAX_XML_SIZE) : xml;
 
-  while ((match = itemRegex.exec(xml)) !== null) {
-    const block = match[1];
-    const title = extractTag(block, "title");
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = parser.parse(safeXml);
+  } catch {
+    return [];
+  }
+
+  // Support both RSS (<rss><channel>) and Atom (<feed>) formats
+  const channel =
+    (parsed?.rss as Record<string, unknown>)?.channel ??
+    (parsed?.feed as Record<string, unknown>);
+
+  if (!channel) return [];
+
+  // RSS uses <item>, Atom uses <entry>
+  const rawItems =
+    (channel as Record<string, unknown>).item ??
+    (channel as Record<string, unknown>).entry;
+
+  const items: unknown[] = Array.isArray(rawItems)
+    ? rawItems
+    : rawItems
+    ? [rawItems]
+    : [];
+
+  const result: RssItem[] = [];
+
+  for (const item of items) {
+    if (!item || typeof item !== "object") continue;
+    const i = item as Record<string, unknown>;
+
+    const title = getText(i.title);
     const link =
-      extractTag(block, "link") ||
-      extractAttr(block, "link", "href") ||
+      getText(i.link) ||
+      getText((i["atom:link"] as Record<string, unknown>)?.["@_href"]) ||
       "";
-    const description = extractTag(block, "description").replace(/<[^>]+>/g, "").trim();
+
+    // Strip any HTML tags from description, bounding the tag match to avoid
+    // catastrophic backtracking on malformed input
+    const description = getText(i.description)
+      .replace(/<[^>]{0,1000}>/g, "")
+      .trim();
+
     const image =
-      extractAttr(block, "enclosure", "url") ||
-      extractAttr(block, "media:content", "url") ||
-      extractAttr(block, "media:thumbnail", "url") ||
+      getText((i.enclosure as Record<string, unknown>)?.["@_url"]) ||
+      getText((i["media:content"] as Record<string, unknown>)?.["@_url"]) ||
+      getText((i["media:thumbnail"] as Record<string, unknown>)?.["@_url"]) ||
       null;
 
     if (title && link) {
-      items.push({ title, link, description, image });
+      result.push({ title, link, description, image: image || null });
     }
   }
 
-  return items;
+  return result;
 }
 
-export function formatRssFeedAsMarkdown(items: RssItem[], sourceName: string): string {
+export function formatRssFeedAsMarkdown(
+  items: RssItem[],
+  sourceName: string
+): string {
   if (items.length === 0) return `No articles found from ${sourceName}.`;
 
   const lines = [`*Source: ${sourceName}*\n`];

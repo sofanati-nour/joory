@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { usageBuckets } from "../db/schema";
 import { MODEL_CATALOG, TIER_CONFIG, MARKUP } from "@app/shared";
@@ -53,6 +54,18 @@ type RateLimitResult =
   | { allowed: true; windowRemaining: number; overageRemaining: number; totalCapacity: number; reservedCost: number }
   | { allowed: false; retryAfterMs: number };
 
+// Raw row shape returned by db.execute() (snake_case column names from Postgres)
+type RawBucket = {
+  user_id: string;
+  window_capacity: number;
+  window_remaining: number;
+  window_resets_at: Date;
+  overage_capacity: number;
+  overage_remaining: number;
+  overage_resets_at: Date;
+  updated_at: Date;
+};
+
 export async function checkAndDeduct(
   userId: string,
   tier: Tier,
@@ -62,71 +75,104 @@ export async function checkAndDeduct(
   const now = new Date();
   const limits = getLimits(tier);
 
-  let bucket = await db.query.usageBuckets.findFirst({
-    where: eq(usageBuckets.userId, userId),
-  });
+  return db.transaction(async (tx) => {
+    // SELECT FOR UPDATE acquires a row-level lock, serialising concurrent
+    // requests for the same user so no two requests can both read the same
+    // remaining balance and both be allowed.
+    const locked = await tx.execute(
+      sql`SELECT * FROM usage_buckets WHERE user_id = ${userId} FOR UPDATE`
+    );
 
-  if (!bucket) {
-    const windowResetsAt = new Date(now.getTime() + WINDOW_DURATION_MS);
-    const overageResetsAt = getNextMonthStart(now);
+    let raw = (locked as RawBucket[])[0];
 
-    [bucket] = await db.insert(usageBuckets).values({
-      userId,
-      windowCapacity: limits.windowCapacity,
-      windowRemaining: limits.windowCapacity,
-      windowResetsAt,
-      overageCapacity: limits.overageCapacity,
-      overageRemaining: limits.overageCapacity,
-      overageResetsAt,
-    }).returning();
-  }
+    if (!raw) {
+      // Row doesn't exist yet — create it inside the transaction so the lock
+      // is held from the very first request.
+      const windowResetsAt = new Date(now.getTime() + WINDOW_DURATION_MS);
+      const overageResetsAt = getNextMonthStart(now);
 
-  if (now >= bucket.windowResetsAt) {
-    bucket.windowRemaining = limits.windowCapacity;
-    bucket.windowResetsAt = new Date(now.getTime() + WINDOW_DURATION_MS);
-  }
+      const [inserted] = await tx
+        .insert(usageBuckets)
+        .values({
+          userId,
+          windowCapacity: limits.windowCapacity,
+          windowRemaining: limits.windowCapacity,
+          windowResetsAt,
+          overageCapacity: limits.overageCapacity,
+          overageRemaining: limits.overageCapacity,
+          overageResetsAt,
+        })
+        .returning();
 
-  if (now >= bucket.overageResetsAt) {
-    bucket.overageRemaining = limits.overageCapacity;
-    bucket.overageResetsAt = getNextMonthStart(now);
-  }
+      raw = {
+        user_id: inserted.userId,
+        window_capacity: inserted.windowCapacity,
+        window_remaining: inserted.windowRemaining,
+        window_resets_at: inserted.windowResetsAt,
+        overage_capacity: inserted.overageCapacity,
+        overage_remaining: inserted.overageRemaining,
+        overage_resets_at: inserted.overageResetsAt,
+        updated_at: inserted.updatedAt,
+      };
+    }
 
-  bucket.windowCapacity = limits.windowCapacity;
-  bucket.overageCapacity = limits.overageCapacity;
+    // Apply time-based window / overage resets
+    const windowResetsAt =
+      now >= new Date(raw.window_resets_at)
+        ? new Date(now.getTime() + WINDOW_DURATION_MS)
+        : new Date(raw.window_resets_at);
 
-  let windowRemaining = bucket.windowRemaining;
-  let overageRemaining = bucket.overageRemaining;
+    const overageResetsAt =
+      now >= new Date(raw.overage_resets_at)
+        ? getNextMonthStart(now)
+        : new Date(raw.overage_resets_at);
 
-  if (windowRemaining >= cost) {
-    windowRemaining -= cost;
-  } else if (windowRemaining + overageRemaining >= cost) {
-    const spillover = cost - windowRemaining;
-    windowRemaining = 0;
-    overageRemaining -= spillover;
-  } else {
-    const retryAfterMs = bucket.windowResetsAt.getTime() - now.getTime();
-    return { allowed: false, retryAfterMs: Math.max(retryAfterMs, 0) };
-  }
+    let windowRemaining =
+      now >= new Date(raw.window_resets_at)
+        ? limits.windowCapacity
+        : raw.window_remaining;
 
-  await db.update(usageBuckets)
-    .set({
-      windowCapacity: bucket.windowCapacity,
+    let overageRemaining =
+      now >= new Date(raw.overage_resets_at)
+        ? limits.overageCapacity
+        : raw.overage_remaining;
+
+    if (windowRemaining + overageRemaining < cost) {
+      return {
+        allowed: false,
+        retryAfterMs: Math.max(windowResetsAt.getTime() - now.getTime(), 0),
+      };
+    }
+
+    if (windowRemaining >= cost) {
+      windowRemaining -= cost;
+    } else {
+      const spillover = cost - windowRemaining;
+      windowRemaining = 0;
+      overageRemaining -= spillover;
+    }
+
+    await tx
+      .update(usageBuckets)
+      .set({
+        windowCapacity: limits.windowCapacity,
+        windowRemaining,
+        windowResetsAt,
+        overageCapacity: limits.overageCapacity,
+        overageRemaining,
+        overageResetsAt,
+        updatedAt: now,
+      })
+      .where(eq(usageBuckets.userId, userId));
+
+    return {
+      allowed: true,
       windowRemaining,
-      windowResetsAt: bucket.windowResetsAt,
-      overageCapacity: bucket.overageCapacity,
       overageRemaining,
-      overageResetsAt: bucket.overageResetsAt,
-      updatedAt: now,
-    })
-    .where(eq(usageBuckets.userId, userId));
-
-  return {
-    allowed: true,
-    windowRemaining,
-    overageRemaining,
-    totalCapacity: limits.windowCapacity + limits.overageCapacity,
-    reservedCost: cost,
-  };
+      totalCapacity: limits.windowCapacity + limits.overageCapacity,
+      reservedCost: cost,
+    };
+  });
 }
 
 /**
