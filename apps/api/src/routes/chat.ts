@@ -49,6 +49,8 @@ app.post("/", async (c) => {
   const model = body.model as string;
   const chatId = body.chatId as string | undefined;
   const systemPrompt = body.systemPrompt as string | undefined;
+  const files = Array.isArray(body.files) ? body.files as { name: string; type: string; data: string }[] : undefined;
+  const webSearch = body.webSearch === true;
 
   logger.debug("chat_request_body_parsed", {
     userId: user.id,
@@ -150,7 +152,7 @@ app.post("/", async (c) => {
   logger.info("chat_user_message_inserted", { userId: user.id, conversationId, userMessageId: userMessage.id, historyLength: messageHistory.length });
 
   // ── Build LLM message array ─────────────────────────────────────────────
-  const chatMessages = buildChatMessages(conversation, modelMeta, messageHistory, message);
+  const chatMessages = buildChatMessages(conversation, modelMeta, messageHistory, message, files);
   const maxTokens = Math.min(modelMeta.maxOutput ?? MAX_OUTPUT_TOKENS_CAP, MAX_OUTPUT_TOKENS_CAP);
   logger.debug("chat_llm_payload_built", { userId: user.id, conversationId, chatMessageCount: chatMessages.length, maxTokens });
 
@@ -171,8 +173,9 @@ app.post("/", async (c) => {
 
     try {
       logger.debug("chat_streamtext_invoked", { userId: user.id, conversationId, model });
+      const routerModel = webSearch ? `${model}:online` : model;
       const { fullStream, usage } = streamText({
-        model: openrouter(model),
+        model: openrouter(routerModel),
         messages: chatMessages,
         maxTokens,
         ...(modelMeta.supportsTools && { tools: CHAT_TOOLS, maxSteps: 5 }),

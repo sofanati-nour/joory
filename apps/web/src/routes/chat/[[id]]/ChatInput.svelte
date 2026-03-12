@@ -42,7 +42,6 @@
 	);
 
 	// User subscription logic
-	let isPremium = $derived(userState.tier === 'pro');
 	let remainingCredits = $derived(userState.usage?.totalRemaining ?? 100);
 
 	$effect(() => {
@@ -182,11 +181,11 @@
 	}
 
 	function toggleWebSearch() {
-		if (isPremium) inputState.webSearchEnabled = !inputState.webSearchEnabled;
+		inputState.webSearchEnabled = !inputState.webSearchEnabled;
 	}
 
 	function triggerFileInput() {
-		if (isPremium) fileInput.click();
+		fileInput.click();
 	}
 
 	function handleEnter(event: KeyboardEvent) {

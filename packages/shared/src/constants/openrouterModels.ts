@@ -9118,52 +9118,110 @@ const OPENROUTER_MODELS = {
   },
   "openrouter/hunter-alpha": {
     "canonical_slug": "openrouter/hunter-alpha",
+    "hugging_face_id": "",
     "name": "Hunter Alpha",
-    "description": "GPT-5.4 Pro is OpenAI's most advanced model, building on GPT-5.4's unified architecture with enhanced reasoning capabilities for complex, high-stakes tasks. It features a 1M+ token context window (922K input, 128K output) with support for text and image inputs. Optimized for step-by-step reasoning, instruction following, and accuracy, GPT-5.4 Pro excels at agentic coding, long-context workflows, and multi-step problem solving.",
-    "context_length": 1_048_576,
+    "created": 1773260671,
+    "description": "Hunter Alpha is a 1 Trillion parameter + 1M token context frontier intelligence model built for agentic use. It excels at long-horizon planning, complex reasoning, and sustained multi-step task execution, with the reliability and instruction-following precision that frameworks like OpenClaw need.\n\n**Note:** All prompts and completions for this model are logged by the provider and may be used to improve the model.",
+    "context_length": 1048576,
     "architecture": {
-      "modality": "text+image+file->text",
+      "modality": "text->text",
       "input_modalities": [
-        "text",
-        "image",
-        "file"
+        "text"
       ],
       "output_modalities": [
         "text"
       ],
-      "tokenizer": "GPT",
+      "tokenizer": "Other",
       "instruct_type": null
     },
     "pricing": {
-      "prompt": "0.00",
-      "completion": "0.00",
-      "web_search": "0.00"
+      "prompt": "0",
+      "completion": "0",
+      "request": "0",
+      "image": "0",
+      "web_search": "0",
+      "internal_reasoning": "0"
     },
     "top_provider": {
-      "context_length": 1_048_576,
-      "max_completion_tokens": 32_768,
-      "is_moderated": true
+      "context_length": 1048576,
+      "max_completion_tokens": 32000,
+      "is_moderated": false
     },
     "per_request_limits": null,
     "supported_parameters": [
       "frequency_penalty",
       "include_reasoning",
-      "logit_bias",
-      "logprobs",
       "max_tokens",
       "presence_penalty",
       "reasoning",
       "response_format",
-      "seed",
       "stop",
-      "structured_outputs",
+      "temperature",
       "tool_choice",
       "tools",
-      "top_logprobs"
+      "top_p"
     ],
     "default_parameters": {
-      "temperature": null,
-      "top_p": null,
+      "temperature": 1,
+      "top_p": 0.95,
+      "top_k": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "repetition_penalty": null
+    },
+    "expiration_date": null
+  },
+  "openrouter/healer-alpha": {
+    "canonical_slug": "openrouter/healer-alpha",
+    "hugging_face_id": "",
+    "name": "Healer Alpha",
+    "created": 1773260668,
+    "description": "Healer Alpha is a frontier omni-modal model with vision, hearing, reasoning, and action capabilities. It brings the full power of agentic intelligence into the real world: natively perceiving visual and audio inputs, reasoning across modalities, and executing complex multi-step tasks with precision and reliability.\n\n**Note:** All prompts and completions for this model are logged by the provider and may be used to improve the model.",
+    "context_length": 262144,
+    "architecture": {
+      "modality": "text+image+audio+video->text",
+      "input_modalities": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "tokenizer": "Other",
+      "instruct_type": null
+    },
+    "pricing": {
+      "prompt": "0",
+      "completion": "0",
+      "request": "0",
+      "image": "0",
+      "web_search": "0",
+      "internal_reasoning": "0"
+    },
+    "top_provider": {
+      "context_length": 262144,
+      "max_completion_tokens": 32000,
+      "is_moderated": false
+    },
+    "per_request_limits": null,
+    "supported_parameters": [
+      "frequency_penalty",
+      "include_reasoning",
+      "max_tokens",
+      "presence_penalty",
+      "reasoning",
+      "response_format",
+      "stop",
+      "temperature",
+      "tool_choice",
+      "tools",
+      "top_p"
+    ],
+    "default_parameters": {
+      "temperature": 1,
+      "top_p": 0.95,
       "top_k": null,
       "frequency_penalty": null,
       "presence_penalty": null,

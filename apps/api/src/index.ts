@@ -30,9 +30,16 @@ const app = new Hono();
 
 app.use("*", logger());
 
-// Reject request bodies larger than 1 MB on all routes.
-// The chat SSE stream is a POST but its body is a small JSON object,
-// so 1 MB is generous while still blocking payload-based DoS attempts.
+// Allow larger payloads on chat routes (file attachments up to ~50 MB).
+app.use(
+  "/api/chat*",
+  bodyLimit({
+    maxSize: 50 * 1024 * 1024, // 50 MB
+    onError: (c) => c.json({ error: "Request body too large" }, 413),
+  })
+);
+
+// Reject request bodies larger than 1 MB on all other routes.
 app.use(
   "*",
   bodyLimit({
