@@ -6,13 +6,13 @@
 	import { onMount } from 'svelte';
 	import {
 		LogIn,
-		Plus as PlusIcon,
 		Trash2 as TrashIcon,
 		MessageSquare as MessageSquareIcon,
 		Pin as PinIcon,
 		PinOff as PinOffIcon,
 		ChevronDown as ChevronDownIcon,
-		ChevronRight as ChevronRightIcon
+		ChevronRight as ChevronRightIcon,
+		TriangleAlert as AlertIcon
 	} from '@lucide/svelte';
 	import Spinner from './ui/spinner/spinner.svelte';
 	import { _ } from 'svelte-i18n';
@@ -27,17 +27,13 @@
 		chatState.fetchChats();
 	});
 
-	function handleDeleteChat(e: Event, id: string) {
-		e.preventDefault();
-		e.stopPropagation();
+	function handleDeleteChat(id: string) {
 		if (confirm($_('chat.confirmDeleteChat'))) {
 			chatState.deleteChat(id);
 		}
 	}
 
-	function handleTogglePin(e: Event, id: string) {
-		e.preventDefault();
-		e.stopPropagation();
+	function handleTogglePin(id: string) {
 		chatState.togglePin(id);
 	}
 </script>
@@ -65,7 +61,17 @@
 		</div>
 	</Sidebar.Header>
 	<Sidebar.Content>
-		{#if chatState.isLoading && chatState.chats.length === 0}
+		{#if chatState.error && chatState.chats.length === 0}
+			<div
+				class="flex flex-col items-center justify-center gap-2 py-8 text-center text-sm text-destructive/60"
+			>
+				<AlertIcon class="size-8 opacity-40" />
+				<p>{chatState.error}</p>
+				<Button variant="ghost" class="text-xs" onclick={() => chatState.fetchChats()}>
+					{$_('common.retry')}
+				</Button>
+			</div>
+		{:else if chatState.isLoading && chatState.chats.length === 0}
 			<div class="flex justify-center p-4">
 				<Spinner class="size-5 text-muted-foreground" />
 			</div>
@@ -100,25 +106,38 @@
 							<Sidebar.Menu>
 								{#each groups.pinned as chat (chat.id)}
 									<Sidebar.MenuItem>
-										<Sidebar.MenuButton isActive={chat.id === currentChatId} class="peer relative">
+										<Sidebar.MenuButton isActive={chat.id === currentChatId}>
 											{#snippet child({ props })}
 												<a href={`/chat/${chat.id}`} {...props}>
-													<span class="truncate font-medium">{chat.title || $_('nav.newChat')}</span
+													<span class="truncate font-medium"
+														>{chat.title || $_('nav.newChat')}</span
 													>
 												</a>
+											{/snippet}
+										</Sidebar.MenuButton>
+										<Sidebar.MenuAction showOnHover>
+											{#snippet child({ props })}
 												<div
-													class="absolute top-1/2 left-2 flex -translate-y-1/2 gap-1 opacity-0 transition-all peer-hover:opacity-100 hover:opacity-100"
+													{...props}
+													class="absolute end-1 top-1.5 flex w-auto items-center gap-0.5 opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100"
 												>
 													<button
-														class="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-														onclick={(e) => handleTogglePin(e, chat.id)}
+														class="flex size-5 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+														onclick={() => handleTogglePin(chat.id)}
 														title={$_('nav.unpin')}
 													>
 														<PinOffIcon class="size-3.5" />
 													</button>
+													<button
+														class="flex size-5 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive"
+														onclick={() => handleDeleteChat(chat.id)}
+														title={$_('common.delete')}
+													>
+														<TrashIcon class="size-3.5" />
+													</button>
 												</div>
 											{/snippet}
-										</Sidebar.MenuButton>
+										</Sidebar.MenuAction>
 									</Sidebar.MenuItem>
 								{/each}
 							</Sidebar.Menu>
@@ -140,31 +159,39 @@
 									<Sidebar.MenuItem>
 										<Sidebar.MenuButton
 											isActive={chat.id === currentChatId}
-											class="group/item relative"
 											id={'chat-' + chat.id}
 										>
 											{#snippet child({ props })}
 												<a href={`/chat/${chat.id}`} {...props}>
-													<span class="truncate">{chat.title || $_('nav.newChat')}</span>
-													<div class="ms-auto flex gap-1 opacity-0 group-hover/item:opacity-100">
-														<button
-															class="rounded-md p-1 text-center text-muted-foreground hover:bg-muted hover:text-foreground"
-															onclick={(e) => handleTogglePin(e, chat.id)}
-															title={$_('nav.pin')}
-														>
-															<PinIcon class="size-3" />
-														</button>
-														<button
-															class="rounded-md p-1 text-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-															onclick={(e) => handleDeleteChat(e, chat.id)}
-															title={$_('common.delete')}
-														>
-															<TrashIcon class="size-3" />
-														</button>
-													</div>
+													<span class="truncate"
+														>{chat.title || $_('nav.newChat')}</span
+													>
 												</a>
 											{/snippet}
 										</Sidebar.MenuButton>
+										<Sidebar.MenuAction showOnHover>
+											{#snippet child({ props })}
+												<div
+													{...props}
+													class="absolute end-1 top-1.5 flex w-auto items-center gap-0.5 opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100"
+												>
+													<button
+														class="flex size-5 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+														onclick={() => handleTogglePin(chat.id)}
+														title={$_('nav.pin')}
+													>
+														<PinIcon class="size-3.5" />
+													</button>
+													<button
+														class="flex size-5 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive"
+														onclick={() => handleDeleteChat(chat.id)}
+														title={$_('common.delete')}
+													>
+														<TrashIcon class="size-3.5" />
+													</button>
+												</div>
+											{/snippet}
+										</Sidebar.MenuAction>
 									</Sidebar.MenuItem>
 								{/each}
 							</Sidebar.Menu>
@@ -190,16 +217,16 @@
 					<div class="flex min-w-0 flex-col items-start text-sm">
 						<span class="truncate font-medium text-foreground">{user.name}</span>
 						<span class="truncate text-xs text-muted-foreground">
-							{userState.tier === 'pro' ? $_('nav.paidSubscription') : $_('nav.freeSubscription')}
+							{userState.tier !== 'free' ? $_('nav.paidSubscription') : $_('nav.freeSubscription')}
 						</span>
 					</div>
 				</Button>
 			{:else}
 				<div class="flex w-full justify-start gap-3 px-2 py-2">
-					<Skeleton class="aspect-square size-8 rounded-full bg-emerald-200!" />
+					<Skeleton class="aspect-square size-8 rounded-full bg-muted-foreground/20" />
 					<div class="my-auto flex w-full flex-col items-start gap-y-2">
-						<Skeleton class="h-2 w-full bg-emerald-200!" />
-						<Skeleton class="h-2 w-1/2 bg-emerald-200!" />
+						<Skeleton class="h-2 w-full bg-muted-foreground/20" />
+						<Skeleton class="h-2 w-1/2 bg-muted-foreground/20" />
 					</div>
 				</div>
 			{/if}

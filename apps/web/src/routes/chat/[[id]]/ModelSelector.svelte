@@ -34,7 +34,8 @@
 		google: { icon: Icon.Google, label: 'Google' },
 		'x-ai': { icon: Icon.XAi, label: 'X AI' },
 		deepseek: { icon: Icon.Deepseek, label: 'DeepSeek' },
-		'meta-llama': { icon: Icon.Meta, label: 'Meta' }
+		'meta-llama': { icon: Icon.Meta, label: 'Meta' },
+		openrouter: { icon: Icon.OpenAI, label: 'OpenRouter' }
 	};
 
 	const providers = [

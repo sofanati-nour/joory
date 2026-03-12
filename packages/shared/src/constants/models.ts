@@ -1,4 +1,4 @@
-import type { Model } from "../schemas/models";
+import { parseModelById, type Model } from "../schemas/models";
 import OPEN_AI_MODEL_CATALOG from "./models/openai";
 import GOOGLE_MODEL_CATALOG from "./models/google";
 import ANTHROPIC_MODEL_CATALOG from "./models/anthropic";
@@ -9,6 +9,11 @@ export const MODEL_CATALOG: Model[] = [
     ...GOOGLE_MODEL_CATALOG,
     ...ANTHROPIC_MODEL_CATALOG,
     ...X_AI_MODEL_CATALOG,
+    parseModelById({
+        modelId: "openrouter/hunter-alpha",
+        name: "Hunter Alpha",
+        tier: "free",
+    })
 ];
 
 export const MODEL_MAP = Object.fromEntries(

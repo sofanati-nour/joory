@@ -18,7 +18,8 @@
 		| { type: 'code'; code: string; lang: string; highlighted: string };
 
 	let contentParts = $state<ContentPart[]>([]);
-	let parseTimeout: ReturnType<typeof setTimeout>;
+	let parseTimeout: ReturnType<typeof setTimeout> | undefined;
+	let processSeq = 0;
 	let highlighterReady = $state(!!getHighlighterInstance());
 
 	// Initialize highlighter if needed
@@ -42,24 +43,27 @@
 		let result = content;
 
 		// 1. Unclosed code fence → infer closing fence
-		//    Odd number of ``` means one block is still open.
-		const segments = result.split('```');
-		if (segments.length % 2 === 0) {
+		//    Count fences outside inline code spans. We strip inline code first
+		//    so backtick-heavy inline snippets don't produce false positives.
+		const withoutInline = result.replace(/`[^`]*`/g, '');
+		const fenceCount = (withoutInline.match(/^`{3,}/gm) ?? []).length;
+		if (fenceCount % 2 !== 0) {
 			result = result + '\n```';
 		}
 
 		// 2. Unclosed markdown link URL: [text](url  →  [text](url)
 		result = result.replace(/(\[[^\]]*\]\([^)]*$)/, '$1)');
 
-		// 3. Unclosed markdown link label: [text  →  text (client-only heuristic)
-		//    Strip the leading [ so it renders as plain text instead of a
-		//    broken fragment that later snaps into a clickable link.
-		result = result.replace(/\[([^\]]*$)/, '$1');
+		// 3. Unclosed markdown link label: [text  →  text
+		//    Only strip a trailing bare '[...' if it's at the start of a line
+		//    (or start of string) to avoid stripping legitimate bracket usage.
+		result = result.replace(/(^|\n)\[([^\]]*$)/, '$1$2');
 
 		return result;
 	}
 
 	async function processContent(rawContent: string) {
+		const seq = ++processSeq;
 		try {
 			const content = inferContent(rawContent);
 			const highlighter = getHighlighterInstance();
@@ -121,7 +125,10 @@
 			}
 
 			flushNonCode();
-			contentParts = parts;
+			// Only apply if no newer call has started since we began
+			if (seq === processSeq) {
+				contentParts = parts;
+			}
 		} catch (err) {
 			console.error(err);
 		}
@@ -154,18 +161,15 @@
 
 	// Extract unique HTTP(S) links from the raw markdown, capped at 5.
 	// Skips image URLs (preceded by '!') since those render inline already.
-	// Use RegExp constructor (not a literal) so forward slashes in the pattern
-	// don't require escaping and can't accidentally terminate the regex literal.
-	const LINK_RE = new RegExp(
-		'(?<!!)\\[[^\\]]*\\]\\((https?://[^)]+)\\)|(?<![!(\\[])https?://\\S+',
-		'g'
-	);
+	const LINK_PATTERN =
+		'(?<!!)\\[[^\\]]*\\]\\((https?://[^)]+)\\)|(?<![!(\\[])https?://\\S+';
 	let previewUrls = $derived.by(() => {
 		if ($isGenerating) return [];
 		const urls = new Set<string>();
 		let match: RegExpExecArray | null;
-		LINK_RE.lastIndex = 0;
-		while ((match = LINK_RE.exec(msg.content)) !== null) {
+		// Create a fresh regex each invocation to avoid shared lastIndex state.
+		const linkRe = new RegExp(LINK_PATTERN, 'g');
+		while ((match = linkRe.exec(msg.content)) !== null) {
 			const url = match[1] ?? match[0];
 			try {
 				new URL(url);

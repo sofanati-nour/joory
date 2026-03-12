@@ -9,6 +9,7 @@
 		"loading": "Loading...",
 		"saving": "Saving...",
 		"sending": "Sending...",
+		"retry": "Retry",
 		"login": "Sign In",
 		"logout": "Sign Out",
 		"subscribe": "Subscribe",

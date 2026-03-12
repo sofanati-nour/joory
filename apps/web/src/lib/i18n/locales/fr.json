@@ -9,6 +9,7 @@
 		"loading": "Chargement...",
 		"saving": "Enregistrement...",
 		"sending": "Envoi...",
+		"retry": "Réessayer",
 		"login": "Se connecter",
 		"logout": "Se déconnecter",
 		"subscribe": "S'abonner",
