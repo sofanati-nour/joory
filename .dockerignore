@@ -1,0 +1,12 @@
+node_modules
+.svelte-kit
+apps/web/build
+apps/web/.svelte-kit
+*.log
+.git
+.env
+.env.*
+!.env.production.example
+caddy_data
+caddy_config
+pgdata
