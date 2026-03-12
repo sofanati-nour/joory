@@ -45,6 +45,13 @@ export const logger = {
     if (err instanceof Error) {
       errFields.errorMessage = err.message;
       if (isDev) errFields.stack = err.stack;
+      // Capture AI SDK error details (AI_APICallError, etc.)
+      if ("statusCode" in err) errFields.statusCode = (err as any).statusCode;
+      if ("responseBody" in err) errFields.responseBody = (err as any).responseBody;
+      if ("url" in err) errFields.url = (err as any).url;
+      if ("cause" in err && err.cause) {
+        errFields.cause = err.cause instanceof Error ? err.cause.message : String(err.cause);
+      }
     } else if (err !== undefined) {
       errFields.errorMessage = String(err);
     }

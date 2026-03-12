@@ -35,7 +35,9 @@ const parser = new XMLParser({
   allowBooleanAttributes: true,
 });
 
-export function parseRssFeed(xml: string): RssItem[] {
+const DEFAULT_MAX_ITEMS = 20;
+
+export function parseRssFeed(xml: string, maxItems = DEFAULT_MAX_ITEMS): RssItem[] {
   const safeXml = xml.length > MAX_XML_SIZE ? xml.slice(0, MAX_XML_SIZE) : xml;
 
   let parsed: Record<string, unknown>;
@@ -89,6 +91,7 @@ export function parseRssFeed(xml: string): RssItem[] {
 
     if (title && link) {
       result.push({ title, link, description, image: image || null });
+      if (result.length >= maxItems) break;
     }
   }
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import DOMPurify from 'isomorphic-dompurify';
-	import { getHighlighter, getHighlighterInstance } from '$lib/highlighter';
+	import { getHighlighter, getHighlighterInstance, ensureLanguageLoaded } from '$lib/highlighter';
 	import { markdownParser } from '$lib/markdown';
 	import { isGenerating } from '$lib/stores/chat';
 	import type { Message } from '$lib/stores/chat';
@@ -20,13 +20,14 @@
 	let contentParts = $state<ContentPart[]>([]);
 	let parseTimeout: ReturnType<typeof setTimeout> | undefined;
 	let processSeq = 0;
-	let highlighterReady = $state(!!getHighlighterInstance());
 
 	// Initialize highlighter if needed
 	onMount(() => {
-		if (!highlighterReady) {
+		if (!getHighlighterInstance()) {
 			getHighlighter().then(() => {
-				highlighterReady = true;
+				// Clear any pending debounced update to avoid a stale un-highlighted
+				// render overwriting the highlighted one.
+				clearTimeout(parseTimeout);
 				// Force re-process to apply highlighting
 				processContent(msg.content);
 			});
@@ -60,6 +61,10 @@
 		result = result.replace(/(^|\n)\[([^\]]*$)/, '$1$2');
 
 		return result;
+	}
+
+	function escapeHtml(str: string): string {
+		return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	}
 
 	async function processContent(rawContent: string) {
@@ -98,24 +103,15 @@
 					let highlighted = '';
 					if (highlighter) {
 						try {
-							// Await loadLanguage before checking getLoadedLanguages() so the
-							// result reflects the completed load, not an in-flight one.
-							if (!highlighter.getLoadedLanguages().includes(lang)) {
-								try {
-									// @ts-ignore — loadLanguage exists at runtime
-									await highlighter.loadLanguage(lang);
-								} catch {
-									// Language not supported by shiki — fall back to 'text'
-								}
-							}
+							await ensureLanguageLoaded(lang);
 							const validLang = highlighter.getLoadedLanguages().includes(lang) ? lang : 'text';
 							highlighted = highlighter.codeToHtml(code, { lang: validLang, theme: 'nord' });
 						} catch {
-							highlighted = `<pre><code>${code}</code></pre>`;
+							highlighted = `<pre><code>${escapeHtml(code)}</code></pre>`;
 						}
 					} else {
 						// Fallback if highlighter not ready
-						highlighted = `<pre><code>${code}</code></pre>`;
+						highlighted = `<pre><code>${escapeHtml(code)}</code></pre>`;
 					}
 
 					parts.push({ type: 'code', code, lang, highlighted });
@@ -161,15 +157,14 @@
 
 	// Extract unique HTTP(S) links from the raw markdown, capped at 5.
 	// Skips image URLs (preceded by '!') since those render inline already.
-	const LINK_PATTERN =
-		'(?<!!)\\[[^\\]]*\\]\\((https?://[^)]+)\\)|(?<![!(\\[])https?://\\S+';
+	const LINK_RE = /(?<!!)\[[^\]]*\]\((https?:\/\/[^)]+)\)|(?<![!(\[])https?:\/\/\S+/g;
 	let previewUrls = $derived.by(() => {
 		if ($isGenerating) return [];
 		const urls = new Set<string>();
 		let match: RegExpExecArray | null;
-		// Create a fresh regex each invocation to avoid shared lastIndex state.
-		const linkRe = new RegExp(LINK_PATTERN, 'g');
-		while ((match = linkRe.exec(msg.content)) !== null) {
+		// Reset lastIndex so the global regex starts from the beginning each invocation.
+		LINK_RE.lastIndex = 0;
+		while ((match = LINK_RE.exec(msg.content)) !== null) {
 			const url = match[1] ?? match[0];
 			try {
 				const parsed = new URL(url);
@@ -259,21 +254,13 @@
 					<span class="break-words whitespace-pre-wrap">{msg.content}</span>
 				{:else if $isGenerating && !msg.status && !msg.reasoning}
 					<div class="typing-indicator">
-						<svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-							<path
-								d="M50 0 C50 0 65 35 100 50 C65 65 50 100 50 100 C50 100 35 65 0 50 C35 35 50 0 50 0Z"
-							/>
-						</svg>
-						<svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-							<path
-								d="M50 0 C50 0 65 35 100 50 C65 65 50 100 50 100 C50 100 35 65 0 50 C35 35 50 0 50 0Z"
-							/>
-						</svg>
-						<svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-							<path
-								d="M50 0 C50 0 65 35 100 50 C65 65 50 100 50 100 C50 100 35 65 0 50 C35 35 50 0 50 0Z"
-							/>
-						</svg>
+						{#each { length: 3 } as _}
+							<svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+								<path
+									d="M50 0 C50 0 65 35 100 50 C65 65 50 100 50 100 C50 100 35 65 0 50 C35 35 50 0 50 0Z"
+								/>
+							</svg>
+						{/each}
 					</div>
 				{/if}
 			</article>

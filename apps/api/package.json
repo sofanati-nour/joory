@@ -5,7 +5,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "cleanup:empty-chats": "bun run src/scripts/cleanup-empty-chats.ts",
+    "cleanup:empty-chats:dry": "bun run src/scripts/cleanup-empty-chats.ts --dry-run"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.0",

@@ -4,19 +4,13 @@ import { authMiddleware, type UserWithTier } from "../middleware/auth";
 import { db } from "../db";
 import { conversations } from "../db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { isValidUUID } from "../lib/validation";
 
 type Env = {
   Variables: {
     user: UserWithTier;
   };
 };
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function isValidUUID(id: string): boolean {
-  return UUID_RE.test(id);
-}
 
 const pinSchema = z.object({
   is_pinned: z.boolean(),
@@ -34,7 +28,11 @@ app.post("/", async (c) => {
       eq(conversations.userId, user.id),
       eq(conversations.isArchived, false)
     ),
-    orderBy: [desc(conversations.isPinned), desc(conversations.updatedAt)],
+    orderBy: [
+      desc(conversations.isPinned),
+      desc(conversations.updatedAt),
+      desc(conversations.createdAt),
+    ],
     columns: {
       id: true,
       title: true,

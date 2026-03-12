@@ -1,21 +1,8 @@
-import { tool, jsonSchema } from "ai";
-import { parseRssFeed, formatRssFeedAsMarkdown } from "./parseRssFeed";
+import { makeRssFeedTool } from "./makeRssFeedTool";
 
-/**
- * AI SDK tool that fetches the latest news feed from SANA (Syrian Arab News Agency).
- * Returns pre-formatted markdown so article links are guaranteed in the output.
- */
-export const fetchSanaFeedTool = tool({
+export const fetchSanaFeedTool = makeRssFeedTool({
+  url: "https://sana.sy/feed",
+  name: "SANA (Syrian Arab News Agency)",
   description:
-    "Fetch the latest news headlines and articles from SANA (Syrian Arab News Agency, sana.sy). Use this when the user asks about news from Syria or current events in Syria.",
-  parameters: jsonSchema({ type: "object", properties: {}, additionalProperties: false }),
-  execute: async () => {
-    const response = await fetch("https://sana.sy/feed");
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Sana feed: ${response.status}`);
-    }
-    const xml = await response.text();
-    const items = parseRssFeed(xml);
-    return formatRssFeedAsMarkdown(items, "SANA (Syrian Arab News Agency)");
-  },
+    "Fetch the latest news from SANA (Syrian Arab News Agency), Syria's official state news agency covering politics, government decisions, diplomacy, and domestic affairs.",
 });

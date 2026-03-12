@@ -83,7 +83,7 @@ export async function checkAndDeduct(
       sql`SELECT * FROM usage_buckets WHERE user_id = ${userId} FOR UPDATE`
     );
 
-    let raw = (locked as RawBucket[])[0];
+    let raw = (locked as unknown as RawBucket[])[0];
 
     if (!raw) {
       // Row doesn't exist yet — create it inside the transaction so the lock
@@ -188,42 +188,45 @@ export async function settleUsage(
 
   if (Math.abs(diff) < 0.01) return; // no meaningful difference
 
-  const bucket = await db.query.usageBuckets.findFirst({
-    where: eq(usageBuckets.userId, userId),
-  });
+  await db.transaction(async (tx) => {
+    // Lock the row so concurrent settle calls for the same user don't race
+    const locked = await tx.execute(
+      sql`SELECT * FROM usage_buckets WHERE user_id = ${userId} FOR UPDATE`
+    );
 
-  if (!bucket) return;
+    const bucket = (locked as unknown as RawBucket[])[0];
+    if (!bucket) return;
 
-  let windowRemaining = bucket.windowRemaining;
-  let overageRemaining = bucket.overageRemaining;
+    let windowRemaining = bucket.window_remaining;
+    let overageRemaining = bucket.overage_remaining;
 
-  if (diff < 0) {
-    // Credit back: add to window first (up to capacity), then overage
-    const credit = Math.abs(diff);
-    const windowSpace = bucket.windowCapacity - windowRemaining;
-    const windowCredit = Math.min(credit, windowSpace);
-    windowRemaining += windowCredit;
-    overageRemaining += credit - windowCredit;
-    // Cap overage at capacity
-    overageRemaining = Math.min(overageRemaining, bucket.overageCapacity);
-  } else {
-    // Deduct more: from window first, then overage
-    if (windowRemaining >= diff) {
-      windowRemaining -= diff;
+    if (diff < 0) {
+      // Credit back: add to window first (up to capacity), then overage
+      const credit = Math.abs(diff);
+      const windowSpace = bucket.window_capacity - windowRemaining;
+      const windowCredit = Math.min(credit, windowSpace);
+      windowRemaining += windowCredit;
+      overageRemaining += credit - windowCredit;
+      overageRemaining = Math.min(overageRemaining, bucket.overage_capacity);
     } else {
-      const spillover = diff - windowRemaining;
-      windowRemaining = 0;
-      overageRemaining = Math.max(0, overageRemaining - spillover);
+      // Deduct more: from window first, then overage
+      if (windowRemaining >= diff) {
+        windowRemaining -= diff;
+      } else {
+        const spillover = diff - windowRemaining;
+        windowRemaining = 0;
+        overageRemaining = Math.max(0, overageRemaining - spillover);
+      }
     }
-  }
 
-  await db.update(usageBuckets)
-    .set({
-      windowRemaining,
-      overageRemaining,
-      updatedAt: new Date(),
-    })
-    .where(eq(usageBuckets.userId, userId));
+    await tx.update(usageBuckets)
+      .set({
+        windowRemaining,
+        overageRemaining,
+        updatedAt: new Date(),
+      })
+      .where(eq(usageBuckets.userId, userId));
+  });
 }
 
 export async function getUsageStatus(userId: string, tier: Tier) {
