@@ -36,8 +36,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-joory}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-joory}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY in .env}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://yourdomain.com}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://yourdomain.com}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://api.joory.chat}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-"https://api.joory.chat,https://joory.chat"}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       PORT: "3001"
@@ -51,12 +51,13 @@ services:
       context: .
       target: web
       args:
-        PUBLIC_API_BASE: ${PUBLIC_API_BASE:-https://yourdomain.com}
+        PUBLIC_API_BASE: ${PUBLIC_API_BASE:-https://api.joory.chat}
     restart: unless-stopped
     depends_on:
       - api
     environment:
       PORT: "3000"
+      PUBLIC_API_BASE: ${PUBLIC_API_BASE:-https://api.joory.chat}
       NODE_ENV: production
     expose:
       - "3000"
