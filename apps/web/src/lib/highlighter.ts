@@ -1,28 +1,29 @@
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 import { bundledLanguages } from 'shiki/langs';
+import { bundledThemes } from 'shiki/themes';
 
 let highlighterPromise: Promise<HighlighterCore> | null = null;
 let highlighterInstance: HighlighterCore | null = null;
 
 // Pre-loaded languages — commonly used in chat responses.
-const PRELOADED_LANGS = [
-	import('@shikijs/langs/javascript'),
-	import('@shikijs/langs/typescript'),
-	import('@shikijs/langs/html'),
-	import('@shikijs/langs/css'),
-	import('@shikijs/langs/python'),
-	import('@shikijs/langs/bash'),
-	import('@shikijs/langs/json'),
-	import('@shikijs/langs/svelte'),
-	import('@shikijs/langs/php')
-];
+const PRELOADED_LANG_KEYS = [
+	'javascript',
+	'typescript',
+	'html',
+	'css',
+	'python',
+	'bash',
+	'json',
+	'svelte',
+	'php'
+] as const;
 
 export const getHighlighter = () => {
 	if (!highlighterPromise) {
 		highlighterPromise = createHighlighterCore({
-			themes: [import('@shikijs/themes/nord')],
-			langs: PRELOADED_LANGS,
+			themes: [bundledThemes['nord']],
+			langs: PRELOADED_LANG_KEYS.map((k) => bundledLanguages[k]),
 			// Use the pure-JS regex engine — avoids WASM loading issues in the browser.
 			engine: createJavaScriptRegexEngine()
 		}).then((h) => {
