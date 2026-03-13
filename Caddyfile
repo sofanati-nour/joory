@@ -1,21 +1,16 @@
 # ============================================================
 # Joory — Caddyfile
 #
-# Replace {$DOMAIN} with your actual domain, or set the
-# DOMAIN env var in your .env / shell before starting Caddy.
-#
 # Caddy automatically provisions & renews TLS certificates
 # via Let's Encrypt / ZeroSSL.
 # ============================================================
 
-{$DOMAIN:joory.chat} {
-	# ---- API routes → api container ----
-	handle /api/* {
-		reverse_proxy api:3001
-	}
+# ---- API subdomain → api container ----
+api.joory.chat {
+	reverse_proxy api:3001
+}
 
-	# ---- Everything else → SvelteKit web container ----
-	handle {
-		reverse_proxy web:3000
-	}
+# ---- Main domain → SvelteKit web container ----
+joory.chat {
+	reverse_proxy web:3000
 }
