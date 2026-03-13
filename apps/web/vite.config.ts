@@ -9,7 +9,7 @@ export default defineConfig({
 	optimizeDeps: { exclude: ['@app/shared', 'zod'] },
 	build: {
 		rollupOptions: {
-			external: ['shiki']
+			external: ['shiki', 'shiki/core', 'shiki/engine/javascript', 'shiki/langs', 'shiki/themes/nord']
 		}
 	},
 	envDir: resolve(__dirname, '../..')
