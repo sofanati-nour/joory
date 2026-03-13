@@ -12,7 +12,7 @@ export default defineConfig({
 			external: [
 				'shiki',
 				'shiki/core',
-				'@shiki/themes/nord',
+				'@shikijs/themes/nord',
 				'@shikijs/langs/javascript',
 				'@shikijs/langs/typescript',
 				'@shikijs/langs/html',
