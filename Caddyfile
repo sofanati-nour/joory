@@ -8,7 +8,7 @@
 # via Let's Encrypt / ZeroSSL.
 # ============================================================
 
-{$DOMAIN:yourdomain.com} {
+{$DOMAIN:joory.chat} {
 	# ---- API routes → api container ----
 	handle /api/* {
 		reverse_proxy api:3001
