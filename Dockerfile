@@ -28,7 +28,7 @@ FROM source AS build-web
 # Provide a dummy value so vite doesn't fail on missing env
 ENV PUBLIC_API_BASE=__PLACEHOLDER__
 WORKDIR /app/apps/web
-RUN bun run build
+RUN bun --bun run build
 
 # ---------- web — production runner ----------
 FROM base AS web
