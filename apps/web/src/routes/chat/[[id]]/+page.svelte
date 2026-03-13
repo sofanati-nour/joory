@@ -75,7 +75,7 @@
 	<div class="pointer-events-none absolute right-0 bottom-0 left-0 select-none">
 		{#if !params.id && inputState.text.trim() === '' && $messages.length === 0}
 			<img
-				src="/stamps-nobg.png"
+				src="/stamps-nobg.avif"
 				alt="Stamps"
 				class="min-h-[300px] object-cover"
 				in:fly={{ y: 100, duration: 100 }}
