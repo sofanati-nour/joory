@@ -50,11 +50,12 @@ services:
     build:
       context: .
       target: web
+      args:
+        PUBLIC_API_BASE: ${PUBLIC_API_BASE:-https://yourdomain.com}
     restart: unless-stopped
     depends_on:
       - api
     environment:
-      PUBLIC_API_BASE: ${PUBLIC_API_BASE:-https://yourdomain.com}
       PORT: "3000"
       NODE_ENV: production
     expose:

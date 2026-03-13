@@ -25,8 +25,8 @@ COPY apps/web ./apps/web
 
 # ---------- build-web — SvelteKit build (svelte-adapter-bun) ----------
 FROM source AS build-web
-# Provide a dummy value so vite doesn't fail on missing env
-ENV PUBLIC_API_BASE=__PLACEHOLDER__
+ARG PUBLIC_API_BASE
+ENV PUBLIC_API_BASE=${PUBLIC_API_BASE:-__PLACEHOLDER__}
 WORKDIR /app/apps/web
 RUN bun --bun run build
 
