@@ -13,7 +13,7 @@ function getAllowedOrigins(): string[] {
   if (!isProduction) {
     return ["http://localhost:5173", "http://localhost:4173"];
   }
-  return [];
+  return ["https://joory.chat"];
 }
 
 // Only enable Google OAuth when both credentials are explicitly provided
@@ -45,11 +45,16 @@ export const auth = betterAuth({
   trustedOrigins: getAllowedOrigins(),
   advanced: {
     cookiePrefix: "joory",
+    // Enable cross-subdomain cookies so SvelteKit can read the session
+    crossSubDomainCookies: {
+      enabled: true,
+    },
     defaultCookieAttributes: {
       httpOnly: true,
       secure: isProduction,
       sameSite: "lax",
       path: "/",
+      domain: isProduction ? ".joory.chat" : undefined,
     },
   },
 });
