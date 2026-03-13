@@ -13,9 +13,26 @@
 	let preview = $state<Preview | null>(null);
 	let failed = $state(false);
 
+	// Private / reserved IP ranges that must never be reachable via SSRF.
+	// Covers: loopback, RFC-1918 private, link-local (incl. AWS metadata 169.254.169.254),
+	// IPv6 loopback/link-local/unique-local, and the "unspecified" address.
+	const PRIVATE_IP_RE =
+	/^(127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|169\.254\.|0\.0\.0\.0$|::1$|fc00:|fd[0-9a-f]{2}:|fe80:)/i;
+
+	const BLOCKED_HOSTNAMES = new Set([
+	"localhost",
+	"0.0.0.0",
+	"metadata.google.internal",
+	"metadata.internal",
+	]);
+
 	$effect(() => {
 		failed = false;
 		preview = null;
+		if (BLOCKED_HOSTNAMES.has(url.toLowerCase())) return;
+		// If the hostname itself looks like a private IP, block immediately
+		if (PRIVATE_IP_RE.test(url)) return;
+
 		fetch(`${API_BASE}/api/unfurl?url=${encodeURIComponent(url)}`, { credentials: 'include' })
 			.then((r) => r.json())
 			.then((data) => {

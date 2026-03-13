@@ -26,10 +26,11 @@ export const handle: Handle = async ({ event, resolve }) => {
     const csp = [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline'",
-        "style-src 'self' 'unsafe-inline'",
+        // Allow the Google Fonts stylesheet
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         `connect-src 'self' ${apiOrigin}`,
         "img-src 'self' data: https:",
-        "font-src 'self' data:",
+        "font-src 'self' data: https://fonts.gstatic.com",
         "frame-src 'none'",
         "object-src 'none'",
         "base-uri 'self'",

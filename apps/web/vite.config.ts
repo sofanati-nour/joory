@@ -7,5 +7,23 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	server: { allowedHosts: ['joory.chat'] },
 	optimizeDeps: { exclude: ['@app/shared', 'zod'] },
+	build: {
+		rollupOptions: {
+			external: [
+				'shiki',
+				'shiki/core',
+				'@shikijs/themes/nord',
+				'@shikijs/langs/javascript',
+				'@shikijs/langs/typescript',
+				'@shikijs/langs/html',
+				'@shikijs/langs/css',
+				'@shikijs/langs/python',
+				'@shikijs/langs/bash',
+				'@shikijs/langs/json',
+				'@shikijs/langs/svelte',
+				'@shikijs/langs/php'
+			]
+		}
+	},
 	envDir: resolve(__dirname, '../..')
 });
