@@ -2,7 +2,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import Button from './ui/button/button.svelte';
-	import { chatState, type Chat } from '$lib/stores/chats.svelte';
+	import { chatState } from '$lib/stores/chats.svelte';
 	import { onMount } from 'svelte';
 	import {
 		LogIn,
@@ -24,7 +24,9 @@
 	let isPinnedOpen = $state(true);
 
 	onMount(() => {
-		chatState.fetchChats();
+		if (user) {
+			chatState.fetchChats();
+		}
 	});
 
 	function handleDeleteChat(id: string) {
@@ -109,8 +111,7 @@
 										<Sidebar.MenuButton isActive={chat.id === currentChatId}>
 											{#snippet child({ props })}
 												<a href={`/chat/${chat.id}`} {...props}>
-													<span class="truncate font-medium"
-														>{chat.title || $_('nav.newChat')}</span
+													<span class="truncate font-medium">{chat.title || $_('nav.newChat')}</span
 													>
 												</a>
 											{/snippet}
@@ -119,7 +120,7 @@
 											{#snippet child({ props })}
 												<div
 													{...props}
-													class="absolute end-1 top-1.5 flex w-auto items-center gap-0.5 opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100"
+													class="absolute inset-e-1 top-1.5 flex w-auto items-center gap-0.5 opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100"
 												>
 													<button
 														class="flex size-5 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -157,15 +158,10 @@
 							<Sidebar.Menu>
 								{#each group.items as chat (chat.id)}
 									<Sidebar.MenuItem>
-										<Sidebar.MenuButton
-											isActive={chat.id === currentChatId}
-											id={'chat-' + chat.id}
-										>
+										<Sidebar.MenuButton isActive={chat.id === currentChatId} id={'chat-' + chat.id}>
 											{#snippet child({ props })}
 												<a href={`/chat/${chat.id}`} {...props}>
-													<span class="truncate"
-														>{chat.title || $_('nav.newChat')}</span
-													>
+													<span class="truncate">{chat.title || $_('nav.newChat')}</span>
 												</a>
 											{/snippet}
 										</Sidebar.MenuButton>
@@ -173,7 +169,7 @@
 											{#snippet child({ props })}
 												<div
 													{...props}
-													class="absolute end-1 top-1.5 flex w-auto items-center gap-0.5 opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100"
+													class="absolute inset-e-1 top-1.5 flex w-auto items-center gap-0.5 opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100"
 												>
 													<button
 														class="flex size-5 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

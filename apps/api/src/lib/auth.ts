@@ -11,7 +11,7 @@ function getAllowedOrigins(): string[] {
       .filter(Boolean);
   }
   if (!isProduction) {
-    return ["http://localhost:5173", "http://localhost:4173"];
+    return ["http://localhost:5173", "http://localhost:4173", "http://localhost:3001", "https://joory.test","https://api.joory.test"];
   }
   return ["https://joory.chat"];
 }
@@ -51,10 +51,10 @@ export const auth = betterAuth({
     },
     defaultCookieAttributes: {
       httpOnly: true,
-      secure: isProduction,
+      secure: true,
       sameSite: "lax",
       path: "/",
-      domain: isProduction ? ".joory.chat" : undefined,
+      domain: isProduction ? ".joory.chat" : '.joory.test',
     },
   },
 });

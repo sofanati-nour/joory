@@ -24,8 +24,7 @@
 	<AppSidebar {user} {currentChatId} />
 	<div
 		class={[
-			'pointer-events-auto fixed top-safe-offset-2 z-50 flex flex-row gap-0.5 p-1',
-			localeStore.dir === 'rtl' ? 'right-2' : 'left-2'
+			'pointer-events-auto fixed top-safe-offset-2 z-50 flex flex-row gap-0.5 p-1 inset-s-2',
 		]}
 	>
 		<div

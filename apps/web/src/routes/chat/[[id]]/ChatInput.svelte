@@ -2,7 +2,6 @@
 	import { sendMessage, isGenerating, chatId } from '$lib/stores/chat';
 	import { userState } from '$lib/stores/user.svelte';
 	import { inputState } from '$lib/stores/input.svelte';
-	import { models } from '$lib/stores/models';
 	import { ALLOWED_UPLOADS, MODEL_MAP } from '@app/shared';
 	import { fileToBase64 } from '$lib/utils';
 	import { _ } from 'svelte-i18n';

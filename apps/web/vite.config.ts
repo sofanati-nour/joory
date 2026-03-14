@@ -91,7 +91,7 @@ export default defineConfig({
 			devOptions: { enabled: true }
 		})
 	],
-	server: { allowedHosts: ['joory.chat'] },
+	server: { allowedHosts: ['joory.chat', 'joory.test'] },
 	optimizeDeps: { exclude: ['@app/shared', 'zod'] },
 	envDir: resolve(__dirname, '../..')
 });
