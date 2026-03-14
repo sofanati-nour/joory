@@ -12,6 +12,6 @@
     "check": "turbo check"
   },
   "devDependencies": {
-    "turbo": "^2.8.10"
+    "turbo": "^2.8.17"
   }
 }
