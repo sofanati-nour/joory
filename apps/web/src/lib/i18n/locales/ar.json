@@ -226,7 +226,10 @@
 		"lowCreditsMsg": "متبقي لديك {count} {type}. يرجى تجديد الاشتراك قريباً.",
 		"standardCredit": "رصيد عادي",
 		"premiumCredit": "رصيد مميز",
-		"confirmDeleteChat": "هل أنت متأكد من حذف هذه المحادثة؟"
+		"confirmDeleteChat": "هل أنت متأكد من حذف هذه المحادثة؟",
+		"errorUnauthorized": "يجب عليك تسجيل الدخول لإرسال الرسائل.",
+		"errorRateLimit": "لقد وصلت إلى حد رسائلك. يرجى الانتظار أو ترقية خطتك.",
+		"errorGeneric": "حدث خطأ ما. يرجى المحاولة مجدداً."
 	},
 	"suggestions": {
 		"howAiWorks": "كيف بيشتغل الذكاء الاصطناعي؟",

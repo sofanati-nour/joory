@@ -160,6 +160,10 @@ class ChatStore {
 
         return groups;
     }
+
+    clear() {
+        this.chats = [];
+    }
 }
 
 export const chatState = new ChatStore();

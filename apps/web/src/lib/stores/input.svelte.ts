@@ -21,6 +21,13 @@ class InputStore {
     setModel(modelId: typeof MODEL_CATALOG[number]["id"]) {
         this.model = modelId;
     }
+
+    clear() {
+        this.model = MODEL_CATALOG[0].id;
+        this.webSearchEnabled = false;
+        this.attachedFiles = [];
+        this.text = '';
+    }
 }
 
 export const inputState = new InputStore();

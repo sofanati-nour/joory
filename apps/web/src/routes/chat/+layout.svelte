@@ -1,11 +1,11 @@
 <script lang="ts">
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
-	import LanguageSwitcher from '$lib/components/language-switcher.svelte';
+	// import LanguageSwitcher from '$lib/components/language-switcher.svelte';
 	import { chatId } from '$lib/stores/chat';
 	import { userState } from '$lib/stores/user.svelte';
 	import { onMount } from 'svelte';
-	import { localeStore } from '$lib/stores/locale.svelte.js';
+	// import { localeStore } from '$lib/stores/locale.svelte.js';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { PlusIcon } from '@lucide/svelte';
 

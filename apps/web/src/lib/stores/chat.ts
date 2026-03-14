@@ -1,6 +1,7 @@
 import { goto } from '$app/navigation';
 import { API_BASE } from '$lib/constants';
 import { get, writable } from 'svelte/store';
+import { t } from 'svelte-i18n';
 import { chatState } from '$lib/stores/chats.svelte';
 import { models } from '$lib/stores/models';
 import { inputState } from './input.svelte';
@@ -56,11 +57,7 @@ export const sendMessage = async (
 	options: { webSearch?: boolean; reasoning?: boolean; files?: ChatFile[] } = {}
 ) => {
 	const errors = validateMessageBeforeSending(content, model, (options.files?.length ?? 0) > 0);
-	if (errors) {
-		errors.forEach((error) => {
-			throw error;
-		});
-	}
+	if (errors) throw errors[0];
 
 	isGenerating.set(true);
 	messages.update((msgs) => [
@@ -92,13 +89,10 @@ export const sendMessage = async (
 		});
 
 		if (!res.ok) {
-			isGenerating.set(false);
-			if (res.status === 429) {
-				const errorDetails = await res.json();
-				console.error(errorDetails);
-				throw new Error(errorDetails.error.message);
-			}
-			throw new Error(`Error: ${res.statusText}`);
+			const $t = get(t);
+			if (res.status === 401) throw new Error($t('chat.errorUnauthorized'));
+			if (res.status === 429) throw new Error($t('chat.errorRateLimit'));
+			throw new Error($t('chat.errorGeneric'));
 		}
 
 		const newChatId = res.headers.get('x-chat-id');
@@ -234,9 +228,18 @@ export const sendMessage = async (
 				}
 			}
 		}
+		// Stream ended without a finish event (e.g. network drop)
+		isGenerating.set(false);
 	} catch (error) {
 		console.error('Error sending message:', error);
-		messages.update((msgs) => [...msgs, { role: 'assistant', content: `Error: ${error}` }]);
+		messages.update((msgs) => {
+			const last = msgs[msgs.length - 1];
+			if (last?.role === 'assistant') {
+				const msg = (error instanceof Error ? error.message : String(error)) || get(t)('chat.errorGeneric');
+				return [...msgs.slice(0, -1), { ...last, content: last.content || msg }];
+			}
+			return msgs;
+		});
 		isGenerating.set(false);
 	}
 };

@@ -76,6 +76,17 @@ class UserStore {
 			throw error;
 		}
 	}
+
+	clear() {
+		this.tier = 'free';
+		this.usage = null;
+		this.profile = {
+			name: '',
+			occupation: '',
+			traits: [],
+			other: ''
+		};
+	}
 }
 
 export const userState = new UserStore();

@@ -28,7 +28,7 @@
 	let supportsAttachments = $derived(modelMeta?.supportsImages || modelMeta?.supportsPdf);
 </script>
 
-<div class="@container mt-1 -mb-px flex w-full min-w-0 flex-row-reverse justify-between pb-1">
+<div class="@container mt-1 -mb-px flex w-full min-w-0 flex-row-reverse justify-between pb-1" dir="ltr">
 	<!-- Send Button -->
 	<div class="-mt-0.5 -mr-0.5 flex shrink-0 items-center justify-center gap-2" aria-label="Message actions">
 		<Button

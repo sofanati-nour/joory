@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { getSmartDirection } from '$lib/utils';
 	import { File as FileIcon, Image as ImageIcon } from '@lucide/svelte';
 	let { msg } = $props();
 </script>
 
-<div class="flex break-after-avoid justify-end">
+<div class="flex break-after-avoid justify-end" dir="ltr">
 	<div
 		class="group relative inline-block max-w-full rounded-2xl rounded-tr-sm border border-border/50 bg-muted/60 dark:bg-muted/30 wrap-break-word transition-colors **:[unicode-bidi:plaintext] md:max-w-[80%] animate-in fade-in-50"
 		style="align-self: flex-start; transition-duration: 0.8s; width: auto;"
@@ -29,7 +30,7 @@
 				<div
 					class="prose max-w-none overflow-auto prose-pink dark:prose-invert prose-p:my-0 prose-pre:m-0 prose-pre:bg-transparent prose-pre:p-0"
 				>
-					<p>{msg.content}</p>
+					<p dir={getSmartDirection(msg.content)}>{msg.content}</p>
 				</div>
 			{/if}
 		</form>

@@ -197,7 +197,10 @@
 		"lowCreditsMsg": "Il vous reste {count} {type}. Veuillez renouveler votre abonnement bientôt.",
 		"standardCredit": "crédits standard",
 		"premiumCredit": "crédits premium",
-		"confirmDeleteChat": "Êtes-vous sûr de vouloir supprimer cette conversation ?"
+		"confirmDeleteChat": "Êtes-vous sûr de vouloir supprimer cette conversation ?",
+		"errorUnauthorized": "Vous devez vous connecter pour envoyer des messages.",
+		"errorRateLimit": "Vous avez atteint votre limite de messages. Veuillez patienter ou mettre à niveau votre abonnement.",
+		"errorGeneric": "Une erreur s'est produite. Veuillez réessayer."
 	},
 	"suggestions": {
 		"howAiWorks": "Comment fonctionne l'intelligence artificielle ?",

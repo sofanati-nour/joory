@@ -197,7 +197,10 @@
 		"lowCreditsMsg": "Te {count} {type} mayî ye. Ji kerema xwe zû abonetiya xwe nûve bike.",
 		"standardCredit": "krediya standard",
 		"premiumCredit": "krediya premium",
-		"confirmDeleteChat": "Tu bawer î ku tu dixwazî ev axaftin jê bibî?"
+		"confirmDeleteChat": "Tu bawer î ku tu dixwazî ev axaftin jê bibî?",
+		"errorUnauthorized": "Divê tu têkevî da ku peyaman bişînî.",
+		"errorRateLimit": "Tu gihîştî sînorê peyamên xwe. Ji kerema xwe bisekine an plana xwe bilind bike.",
+		"errorGeneric": "Tiştek xelet çêbû. Ji kerema xwe dîsa biceribîne."
 	},
 	"suggestions": {
 		"howAiWorks": "Zîrekariya çêkirî çawa dixebite?",

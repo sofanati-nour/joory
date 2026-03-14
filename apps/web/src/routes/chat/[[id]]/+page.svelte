@@ -102,12 +102,12 @@
 			<div
 				class="relative mx-auto flex w-full max-w-3xl flex-col space-y-12 px-4 pt-safe-offset-10 pb-10 print:space-y-0 print:pt-0"
 			>
-				{#each $messages as msg}
+				{#each $messages as msg, i}
 					{#if msg.role === 'user'}
 						<UserMessage {msg} />
 					{/if}
 					{#if msg.role === 'assistant'}
-						<AssistantMessage {msg} />
+						<AssistantMessage {msg} isLast={$isGenerating && i === $messages.length - 1} />
 					{/if}
 				{/each}
 			</div>

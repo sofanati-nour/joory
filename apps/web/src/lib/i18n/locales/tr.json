@@ -197,7 +197,10 @@
 		"lowCreditsMsg": "{count} {type} kaldı. Lütfen yakında aboneliğinizi yenileyin.",
 		"standardCredit": "standart kredi",
 		"premiumCredit": "premium kredi",
-		"confirmDeleteChat": "Bu konuşmayı silmek istediğinizden emin misiniz?"
+		"confirmDeleteChat": "Bu konuşmayı silmek istediğinizden emin misiniz?",
+		"errorUnauthorized": "Mesaj göndermek için giriş yapmanız gerekiyor.",
+		"errorRateLimit": "Mesaj limitinize ulaştınız. Lütfen bekleyin veya planınızı yükseltin.",
+		"errorGeneric": "Bir şeyler ters gitti. Lütfen tekrar deneyin."
 	},
 	"suggestions": {
 		"howAiWorks": "Yapay zeka nasıl çalışır?",

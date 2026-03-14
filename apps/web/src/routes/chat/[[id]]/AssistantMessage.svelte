@@ -2,7 +2,7 @@
 	import DOMPurify from 'isomorphic-dompurify';
 	import { getHighlighter, getHighlighterInstance, ensureLanguageLoaded } from '$lib/highlighter';
 	import { markdownParser } from '$lib/markdown';
-	import { isGenerating } from '$lib/stores/chat';
+	import { isGenerating, messages } from '$lib/stores/chat';
 	import type { Message } from '$lib/stores/chat';
 	import { getSmartDirection } from '$lib/utils';
 	import CodeBlock from '$lib/components/ui/codeblock/CodeBlock.svelte';
@@ -11,7 +11,7 @@
 	import { Brain, Check, Loader2, Wrench } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 
-	let { msg }: { msg: Message } = $props();
+	let { msg, isLast = false }: { msg: Message; isLast?: boolean } = $props();
 
 	type ContentPart =
 		| { type: 'html'; content: string }
@@ -147,7 +147,17 @@
 		return () => clearTimeout(parseTimeout);
 	});
 
+	const CURSOR_SPAN = '<span class="typing-cursor">▋</span>';
+
+	function injectCursor(html: string): string {
+		// Insert cursor before the last closing tag so it sits inline inside the element
+		return html.replace(/(<\/[^>]+>\s*)$/, `${CURSOR_SPAN}$1`);
+	}
+
 	let dir = $derived(getSmartDirection(msg.content));
+	let promptDir = $derived(
+		getSmartDirection([...$messages].reverse().find((m) => m.role === 'user')?.content ?? '')
+	);
 
 	function formatToolName(name: string): string {
 		const key = `tools.${name}`;
@@ -181,14 +191,6 @@
 </script>
 
 <div class="flex break-after-avoid flex-col justify-start gap-3 md:gap-4">
-	<div class="relative flex shrink-0 flex-col items-start">
-		<div
-			class="flex size-8 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20"
-		>
-			<img src="/favicon.svg" alt="AI" class="size-5" />
-		</div>
-	</div>
-
 	<div
 		class="group @container relative w-full max-w-full space-y-4 overflow-hidden wrap-break-word"
 	>
@@ -241,20 +243,22 @@
 
 			<article class="prose max-w-none prose-pink dark:prose-invert" {dir}>
 				{#if contentParts.length > 0}
-					{#each contentParts as part}
+					{#each contentParts as part, idx}
+						{@const isLastPart = isLast && idx === contentParts.length - 1}
 						{#if part.type === 'html'}
-							{@html part.content}
+							{@html isLastPart ? injectCursor(part.content) : part.content}
 						{:else}
 							<CodeBlock code={part.code} language={part.lang}>
 								{@html part.highlighted}
 							</CodeBlock>
+							{#if isLastPart}<span class="typing-cursor">▋</span>{/if}
 						{/if}
 					{/each}
 				{:else if $isGenerating && msg.content}
-					<span class="break-words whitespace-pre-wrap">{msg.content}</span>
-				{:else if $isGenerating && !msg.status && !msg.reasoning}
-					<div class="typing-indicator">
-						{#each { length: 3 } as _}
+					<span class="wrap-break-word whitespace-pre-wrap">{msg.content}{#if isLast}<span class="typing-cursor">▋</span>{/if}</span>
+				{:else if isLast && !msg.status && !msg.reasoning}
+					<div class="waiting-for-generation-indicator" dir={promptDir}>
+						{#each { length: 1 } as _}
 							<svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
 								<path
 									d="M50 0 C50 0 65 35 100 50 C65 65 50 100 50 100 C50 100 35 65 0 50 C35 35 50 0 50 0Z"
@@ -277,12 +281,9 @@
 </div>
 
 <style>
-	.typing-indicator {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	.waiting-for-generation-indicator {
 		gap: 12px;
-		padding: 20px 30px;
+		padding: 20px 0;
 		border-radius: 50px;
 	}
 
@@ -290,19 +291,7 @@
 		width: 24px;
 		height: 24px;
 		fill: #ffd700;
-		animation: bounce 1.4s infinite ease-in-out both;
-	}
-
-	.star:nth-child(1) {
-		animation-delay: -0.32s;
-	}
-
-	.star:nth-child(2) {
-		animation-delay: -0.16s;
-	}
-
-	.star:nth-child(3) {
-		animation-delay: 0s;
+		animation: blink 1.4s infinite ease-in-out both;
 	}
 
 	@keyframes bounce {
@@ -316,5 +305,31 @@
 			transform: scale(1) translateY(-5px);
 			opacity: 1;
 		}
+	}
+
+	@keyframes blink {
+		0% {
+			opacity: 0.2;
+
+		}
+		50% {
+			opacity: 0.5;
+		}
+		100% {
+			opacity: 0.2;
+		}
+	}
+
+	:global(.typing-cursor) {
+		display: inline;
+		margin-inline-start: 1px;
+		color: oklch(50.8% 0.118 165.612);
+		opacity: 1;
+		animation: cursor-blink 0.9s infinite ease-in-out both;
+	}
+
+	@keyframes cursor-blink {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0; }
 	}
 </style>

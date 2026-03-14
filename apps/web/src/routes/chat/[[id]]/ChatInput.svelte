@@ -2,8 +2,8 @@
 	import { sendMessage, isGenerating, chatId } from '$lib/stores/chat';
 	import { userState } from '$lib/stores/user.svelte';
 	import { inputState } from '$lib/stores/input.svelte';
-	import { ALLOWED_UPLOADS, MODEL_MAP } from '@app/shared';
-	import { fileToBase64 } from '$lib/utils';
+	import { ALLOWED_UPLOADS, MODEL_MAP, type ModelId } from '@app/shared';
+	import { fileToBase64, getSmartDirection } from '$lib/utils';
 	import { _ } from 'svelte-i18n';
 	import { cubicOut } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
@@ -14,7 +14,9 @@
 	import InputActions from './InputActions.svelte';
 
 	// Props
-	let { isAlertVisible = $bindable(false), isFloating = $bindable(false) } = $props();
+	let { isAlertVisible = $bindable(false) } = $props();
+	let isFloating = $state(false);
+	let isMultiline = $derived(inputState.text.split('\n').length > 1);
 
 	// Refs
 	let fileInput: HTMLInputElement;
@@ -70,7 +72,7 @@
 			let modelId = inputState.model;
 			let reasoning = false;
 			if (modelId.endsWith(':reasoning')) {
-				modelId = modelId.replace(':reasoning', '');
+				modelId = modelId.replace(':reasoning', '') as ModelId;
 				reasoning = true;
 			}
 
@@ -248,7 +250,7 @@
 					<!-- Form -->
 					<form
 						onsubmit={handleSubmit}
-						class="pointer-events-auto relative flex w-full min-w-0 flex-col items-stretch gap-2 border border-b-0 border-border/40 bg-background/80 px-3 pt-3 pb-safe-offset-3 text-secondary-foreground backdrop-blur-xl max-sm:pb-6 sm:max-w-3xl"
+						class="pointer-events-auto relative flex w-full min-w-0 flex-col items-stretch gap-2 border border-b-0 border-border/40 bg-background/80 px-3 pt-3 pb-safe-offset-2 text-secondary-foreground backdrop-blur-xl sm:max-w-3xl"
 						style="view-transition-name: chat-input; border-radius: {formBorderRadius}; box-shadow: {formBoxShadow};"
 					>
 						<!-- Textarea -->
@@ -258,12 +260,13 @@
 								id="chat-input"
 								bind:value={inputState.text}
 								bind:ref={textareaElement}
+								dir={inputState.text.length > 0 ? getSmartDirection(inputState.text) : undefined}
 								placeholder={$_('chat.inputPlaceholder')}
 								class="w-full min-w-0 resize-none bg-transparent py-2 text-base leading-6 text-foreground outline-none placeholder:text-muted-foreground/60 rounded-lg disabled:opacity-50 placeholder-shown:bg-transparent [:not(:placeholder-shown)]:bg-white/50"
 								onkeydown={handleEnter}
 								disabled={$isGenerating || isProcessingFiles}
 								aria-busy={$isGenerating}
-								style="max-height: 240px !important;"
+								rows={1}
 							/>
 						</InputGroup.Root>
 

@@ -15,6 +15,8 @@
 	import { authClient } from '$lib/auth';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { chatId } from '$lib/stores/chat';
+	import { chatState } from '$lib/stores/chats.svelte.js';
+	import { inputState } from '$lib/stores/input.svelte.js';
 
 	const backHref = $derived($chatId ? `/chat/${$chatId}` : '/chat');
 
@@ -23,6 +25,9 @@
 	async function handleLogout() {
 		await authClient.signOut();
 		await invalidateAll();
+		chatState.clear();
+		userState.clear();
+		inputState.clear();
 		goto('/chat');
 	}
 	let user = $derived(data.user);

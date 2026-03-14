@@ -230,7 +230,10 @@
 		"lowCreditsMsg": "You have {count} {type} remaining. Please renew your subscription soon.",
 		"standardCredit": "standard credits",
 		"premiumCredit": "premium credits",
-		"confirmDeleteChat": "Are you sure you want to delete this conversation?"
+		"confirmDeleteChat": "Are you sure you want to delete this conversation?",
+		"errorUnauthorized": "You need to sign in to send messages.",
+		"errorRateLimit": "You've reached your message limit. Please wait or upgrade your plan.",
+		"errorGeneric": "Something went wrong. Please try again."
 	},
 	"suggestions": {
 		"howAiWorks": "How does artificial intelligence work?",
