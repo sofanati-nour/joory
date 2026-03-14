@@ -92,11 +92,11 @@ app.post("/", async (c) => {
     userId: user.id,
     model,
     allowed: rateLimitResult.allowed,
-    windowRemaining: rateLimitResult.windowRemaining,
-    overageRemaining: rateLimitResult.overageRemaining,
-    totalCapacity: rateLimitResult.totalCapacity,
-    reservedCost: rateLimitResult.reservedCost,
-    retryAfterMs: rateLimitResult.retryAfterMs ?? null,
+    windowRemaining: rateLimitResult.allowed ? rateLimitResult.windowRemaining : 0,
+    overageRemaining: rateLimitResult.allowed ? rateLimitResult.overageRemaining : 0,
+    totalCapacity: rateLimitResult.allowed ? rateLimitResult.totalCapacity : 0,
+    reservedCost: rateLimitResult.allowed ? rateLimitResult.reservedCost : 0,
+    retryAfterMs: !rateLimitResult.allowed ? rateLimitResult.retryAfterMs ?? null : 0,
   });
 
   if (!rateLimitResult.allowed) {
