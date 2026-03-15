@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { tick } from 'svelte';
 	import { messages, loadChat, clearMessages, chatId, isGenerating } from '$lib/stores/chat';
 	import { inputState } from '$lib/stores/input.svelte';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { ArrowDown } from '@lucide/svelte';
 	import ChatInput from './ChatInput.svelte';
 	import UserMessage from './UserMessage.svelte';
 	import AssistantMessage from './AssistantMessage.svelte';
@@ -14,8 +15,40 @@
 	let isGuest = $derived(!$page.data?.user);
 	let chatContainer: HTMLElement;
 	let isAlertVisible = $state(false);
-	let shouldSmoothScroll = $state(false);
 	let chatUUID = $state('');
+
+	// --- Auto-scroll ---
+	// Mirrors Open WebUI's approach: autoScroll is toggled purely by onscroll.
+	// No rAF loop, no wheel/touch detection — just check position on every scroll event.
+	let autoScroll = $state(true);
+	let scrollRaf: number | null = null;
+
+	function handleScroll() {
+		if (!chatContainer) return;
+		const distFromBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+		autoScroll = distFromBottom < 50;
+	}
+
+	// Deduplicate rapid scroll calls (multiple chunks per frame) into one rAF.
+	function scheduleScrollToBottom() {
+		if (scrollRaf !== null) return;
+		scrollRaf = requestAnimationFrame(() => {
+			scrollRaf = null;
+			if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+		});
+	}
+
+	async function scrollToBottom(behavior: ScrollBehavior = 'instant') {
+		await tick();
+		if (chatContainer) {
+			chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior });
+		}
+	}
+
+	function jumpToBottom() {
+		autoScroll = true;
+		scrollToBottom('smooth');
+	}
 
 	// Redirect guests trying to access saved chats
 	$effect(() => {
@@ -24,58 +57,37 @@
 		}
 	});
 
-	// Enable smooth scrolling after initial mount
-	onMount(() => {
-		setTimeout(() => {
-			shouldSmoothScroll = true;
-		}, 150);
-	});
-
 	// Handle route changes (including initial load)
 	$effect(() => {
 		if (params.id && params.id !== chatUUID) {
-			// Don't interrupt if we're currently generating a response
-			// (this happens when navigating from new chat to its assigned ID)
-			if ($isGenerating) {
-				chatUUID = params.id;
-				return;
-			}
-			shouldSmoothScroll = false;
+			if ($isGenerating) { chatUUID = params.id; return; }
+			autoScroll = true;
 			clearMessages();
 			loadChat(params.id);
 			chatUUID = params.id;
-			setTimeout(() => {
-				shouldSmoothScroll = true;
-			}, 150);
+			setTimeout(() => scrollToBottom(), 0);
 		} else if (!params.id && chatUUID) {
-			// Switching back to new chat
-			shouldSmoothScroll = false;
+			autoScroll = true;
 			clearMessages();
 			chatId.set('');
 			inputState.reset();
 			chatUUID = '';
-			setTimeout(() => {
-				shouldSmoothScroll = true;
-			}, 150);
 		}
 	});
 
-	// Scroll to bottom whenever messages update
+	// Scroll on each message update
 	$effect(() => {
-		if ($messages) {
-			scrollToBottom();
+		if ($messages && autoScroll) {
+			scheduleScrollToBottom();
 		}
 	});
 
-	async function scrollToBottom() {
-		await tick();
-		if (chatContainer) {
-			chatContainer.scrollTo({
-				top: chatContainer.scrollHeight,
-				behavior: shouldSmoothScroll ? 'smooth' : 'instant'
-			});
+	// Re-engage auto-scroll when user sends a new message
+	$effect(() => {
+		if ($isGenerating) {
+			autoScroll = true;
 		}
-	}
+	});
 </script>
 
 <main
@@ -104,6 +116,7 @@
 			? '208px'
 			: '112px'}; transition: padding-bottom 0.3s ease-in-out;"
 		bind:this={chatContainer}
+		onscroll={handleScroll}
 		role="log"
 		aria-live="polite"
 		aria-label="Chat history"
@@ -123,6 +136,18 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Scroll to bottom button -->
+	{#if !autoScroll && $messages.length > 0}
+		<button
+			onclick={jumpToBottom}
+			class="absolute bottom-36 left-1/2 z-10 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md transition-all hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+			aria-label="Scroll to bottom"
+			transition:fly={{ y: 10, duration: 200 }}
+		>
+			<ArrowDown class="h-4 w-4 text-slate-600 dark:text-slate-300" />
+		</button>
+	{/if}
 
 	<!-- Chat Input -->
 	<ChatInput bind:isAlertVisible isFloating={!params.id} />

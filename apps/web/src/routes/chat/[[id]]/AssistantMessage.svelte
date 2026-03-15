@@ -1,158 +1,13 @@
 <script lang="ts">
-	import DOMPurify from 'isomorphic-dompurify';
-	import { getHighlighter, getHighlighterInstance, ensureLanguageLoaded } from '$lib/highlighter';
-	import { markdownParser } from '$lib/markdown';
 	import { isGenerating, messages } from '$lib/stores/chat';
 	import type { Message } from '$lib/stores/chat';
 	import { getSmartDirection } from '$lib/utils';
-	import CodeBlock from '$lib/components/ui/codeblock/CodeBlock.svelte';
+	import MarkdownRenderer from '$lib/components/markdown/MarkdownRenderer.svelte';
 	import LinkPreview from '$lib/components/ui/link-preview/LinkPreview.svelte';
-	import { onMount, onDestroy, untrack } from 'svelte';
 	import { Brain, Check, Loader2, Wrench } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 
 	let { msg, isLast = false }: { msg: Message; isLast?: boolean } = $props();
-
-	type ContentPart =
-		| { type: 'html'; content: string }
-		| { type: 'code'; code: string; lang: string; highlighted: string };
-
-	let contentParts = $state<ContentPart[]>([]);
-	let parseTimeout: ReturnType<typeof setTimeout> | undefined;
-	let processSeq = 0;
-
-	// Initialize highlighter if needed
-	onMount(() => {
-		if (!getHighlighterInstance()) {
-			getHighlighter().then(() => {
-				// Clear any pending debounced update to avoid a stale un-highlighted
-				// render overwriting the highlighted one.
-				clearTimeout(parseTimeout);
-				// Force re-process to apply highlighting
-				processContent(msg.content);
-			});
-		}
-	});
-
-	onDestroy(() => {
-		clearTimeout(parseTimeout);
-	});
-
-	// During streaming, infer incomplete syntax so content renders stably
-	// rather than flashing as it transitions from partial → complete form.
-	function inferContent(content: string): string {
-		let result = content;
-
-		// 1. Unclosed code fence → infer closing fence
-		//    Count fences outside inline code spans. We strip inline code first
-		//    so backtick-heavy inline snippets don't produce false positives.
-		const withoutInline = result.replace(/`[^`]*`/g, '');
-		const fenceCount = (withoutInline.match(/^`{3,}/gm) ?? []).length;
-		if (fenceCount % 2 !== 0) {
-			result = result + '\n```';
-		}
-
-		// 2. Unclosed markdown link URL: [text](url  →  [text](url)
-		result = result.replace(/(\[[^\]]*\]\([^)]*$)/, '$1)');
-
-		// 3. Unclosed markdown link label: [text  →  text
-		//    Only strip a trailing bare '[...' if it's at the start of a line
-		//    (or start of string) to avoid stripping legitimate bracket usage.
-		result = result.replace(/(^|\n)\[([^\]]*$)/, '$1$2');
-
-		return result;
-	}
-
-	function escapeHtml(str: string): string {
-		return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	}
-
-	async function processContent(rawContent: string) {
-		const seq = ++processSeq;
-		try {
-			const content = inferContent(rawContent);
-			const highlighter = getHighlighterInstance();
-
-			// Use marked's lexer to tokenize — handles all valid code fence variants
-			// (different backtick counts, optional trailing spaces on the fence line, etc.)
-			// rather than a fragile custom regex.
-			const tokens = markdownParser.lexer(content);
-			// Preserve the links map so parser() resolves reference-style links correctly.
-			const links = (tokens as any).links ?? {};
-			const parts: ContentPart[] = [];
-			let nonCodeTokens: (typeof tokens)[number][] = [];
-
-			const flushNonCode = () => {
-				if (nonCodeTokens.length === 0) return;
-				const subList = Object.assign([...nonCodeTokens], { links });
-				nonCodeTokens = [];
-				// Sanitize AFTER parsing so DOMPurify inspects the actual HTML output,
-				// not just the raw markdown source.
-				const sanitized = DOMPurify.sanitize(markdownParser.parser(subList as any));
-				if (sanitized.trim()) {
-					parts.push({ type: 'html', content: sanitized });
-				}
-			};
-
-			for (const token of tokens) {
-				if (token.type === 'code') {
-					flushNonCode();
-					const lang = token.lang || 'text';
-					const code = token.text;
-
-					let highlighted = '';
-					if (highlighter) {
-						try {
-							await ensureLanguageLoaded(lang);
-							const validLang = highlighter.getLoadedLanguages().includes(lang) ? lang : 'text';
-							highlighted = highlighter.codeToHtml(code, { lang: validLang, theme: 'nord' });
-						} catch {
-							highlighted = `<pre><code>${escapeHtml(code)}</code></pre>`;
-						}
-					} else {
-						// Fallback if highlighter not ready
-						highlighted = `<pre><code>${escapeHtml(code)}</code></pre>`;
-					}
-
-					parts.push({ type: 'code', code, lang, highlighted });
-				} else {
-					nonCodeTokens.push(token);
-				}
-			}
-
-			flushNonCode();
-			// Only apply if no newer call has started since we began
-			if (seq === processSeq) {
-				contentParts = parts;
-			}
-		} catch (err) {
-			console.error(err);
-		}
-	}
-
-	$effect(() => {
-		const content = msg.content;
-		clearTimeout(parseTimeout);
-
-		// If this is the first render or we have no parts yet, run immediately
-		if (untrack(() => contentParts.length) === 0 && content) {
-			processContent(content);
-		} else {
-			// Debounce subsequent updates (streaming)
-			parseTimeout = setTimeout(() => {
-				processContent(content);
-			}, 8);
-		}
-
-		return () => clearTimeout(parseTimeout);
-	});
-
-	const CURSOR_SPAN = '<span class="typing-cursor">▋</span>';
-
-	function injectCursor(html: string): string {
-		// Insert cursor before the last closing tag so it sits inline inside the element
-		return html.replace(/(<\/[^>]+>\s*)$/, `${CURSOR_SPAN}$1`);
-	}
 
 	let dir = $derived(getSmartDirection(msg.content));
 	let promptDir = $derived(
@@ -172,13 +27,11 @@
 		if ($isGenerating) return [];
 		const urls = new Set<string>();
 		let match: RegExpExecArray | null;
-		// Reset lastIndex so the global regex starts from the beginning each invocation.
 		LINK_RE.lastIndex = 0;
 		while ((match = LINK_RE.exec(msg.content)) !== null) {
 			const url = match[1] ?? match[0];
 			try {
 				const parsed = new URL(url);
-				// Only allow safe web protocols — reject javascript:, data:, etc.
 				if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') continue;
 				urls.add(url);
 				if (urls.size >= 5) break;
@@ -242,21 +95,13 @@
 			{/if}
 
 			<article class="prose max-w-none prose-pink dark:prose-invert" {dir}>
-				{#if contentParts.length > 0}
-					{#each contentParts as part, idx}
-						{@const isLastPart = isLast && idx === contentParts.length - 1}
-						{#if part.type === 'html'}
-							{@html isLastPart ? injectCursor(part.content) : part.content}
-						{:else}
-							<CodeBlock code={part.code} language={part.lang}>
-								{@html part.highlighted}
-							</CodeBlock>
-							{#if isLastPart}<span class="typing-cursor">▋</span>{/if}
-						{/if}
-					{/each}
-				{:else if $isGenerating && msg.content}
-					<span class="wrap-break-word whitespace-pre-wrap">{msg.content}{#if isLast}<span class="typing-cursor">▋</span>{/if}</span>
-				{:else if isLast && !msg.status && !msg.reasoning}
+				{#if msg.content}
+					<MarkdownRenderer
+						content={msg.content}
+						isStreaming={$isGenerating && isLast}
+						id={msg.messageId ?? ''}
+					/>
+				{:else if isLast && $isGenerating && !msg.status && !msg.reasoning}
 					<div class="waiting-for-generation-indicator" dir={promptDir}>
 						{#each { length: 1 } as _}
 							<svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -310,7 +155,6 @@
 	@keyframes blink {
 		0% {
 			opacity: 0.2;
-
 		}
 		50% {
 			opacity: 0.5;
