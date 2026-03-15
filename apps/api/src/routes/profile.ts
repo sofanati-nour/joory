@@ -12,10 +12,10 @@ type Env = {
 };
 
 const updateProfileSchema = z.object({
-  name: z.string().max(255).optional(),
-  occupation: z.string().max(255).optional(),
-  traits: z.array(z.string().max(100)).max(20).optional(),
-  other: z.string().max(1000).optional(),
+  name: z.string().max(100).optional(),
+  occupation: z.string().max(100).optional(),
+  traits: z.array(z.string().max(100)).max(50).optional(),
+  other: z.string().max(3000).optional(),
 });
 
 const app = new Hono<Env>();
@@ -40,17 +40,17 @@ app.get("/", async (c) => {
 
     return c.json({
       name: newProfile.displayName ?? "",
-      occupation: "",
-      traits: [],
-      other: "",
+      occupation: newProfile.occupation ?? "",
+      traits: newProfile.traits,
+      other: newProfile.other ?? "",
     });
   }
 
   return c.json({
     name: profile.displayName ?? "",
-    occupation: "",
-    traits: [],
-    other: "",
+    occupation: profile.occupation ?? "",
+    traits: profile.traits,
+    other: profile.other ?? "",
   });
 });
 
@@ -83,12 +83,18 @@ app.post("/", async (c) => {
       .update(userProfiles)
       .set({
         displayName: name ?? existing.displayName,
+        occupation: occupation ?? existing.occupation,
+        traits: traits ?? existing.traits,
+        other: other ?? existing.other,
       })
       .where(eq(userProfiles.userId, user.id));
   } else {
     await db.insert(userProfiles).values({
       userId: user.id,
       displayName: name ?? null,
+      occupation: occupation ?? null,
+      traits: traits ?? [],
+      other: other ?? null,
     });
   }
 

@@ -4,7 +4,7 @@ import {
   timestamp, jsonb, uuid, varchar,
   index, uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 export const messageRoleEnum = pgEnum("message_role", [
   "system", "user", "assistant",
@@ -21,6 +21,9 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
 export const userProfiles = pgTable("user_profiles", {
   userId: text("user_id").primaryKey(),
   displayName: text("display_name"),
+  occupation: text("occupation"),
+  traits: jsonb("traits").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  other: text("other"),
   avatarUrl: text("avatar_url"),
   defaultModel: text("default_model")
     .default("anthropic/claude-sonnet-4"),

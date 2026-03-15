@@ -5,7 +5,17 @@ on:
     branches: [main]
 
 jobs:
+  validate-caddy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Caddyfile
+        run: docker run --rm -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
   deploy:
+    needs: validate-caddy
     runs-on: ubuntu-latest
     if: contains(github.event.head_commit.message, 'ghdeploy')
     steps:

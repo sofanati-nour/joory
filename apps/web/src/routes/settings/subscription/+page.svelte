@@ -190,11 +190,6 @@
 				</Card.Root>
 			</div>
 			<div class="flex flex-col gap-4 md:flex-row">
-				<Button
-					variant="default"
-					class="h-9 w-full px-4 py-2 md:w-64"
-					href="/settings/subscription/payment">{$_('common.subscribeNow')}</Button
-				>
 				<Button variant="outline" class="h-9 w-full px-4 py-2 md:w-64"
 					>{$_('subscription.viewBilling')}</Button
 				>
