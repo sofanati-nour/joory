@@ -100,8 +100,9 @@ export const sendMessage = async (
 		if (!options.isGuest) {
 			const newChatId = res.headers.get('x-chat-id');
 			if (newChatId && chatUUID !== newChatId) {
+				const now = new Date().toISOString();
 				chatId.set(newChatId);
-				chatState.appendChat({ id: newChatId, title: null, pinned: false });
+				chatState.appendChat({ id: newChatId, title: null, created_at: now, updated_at: now, pinned: false });
 				goto(`/chat/${newChatId}`, { replaceState: true, invalidateAll: false });
 			}
 		}
