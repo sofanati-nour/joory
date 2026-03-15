@@ -14,9 +14,7 @@
 	import InputActions from './InputActions.svelte';
 
 	// Props
-	let { isAlertVisible = $bindable(false) } = $props();
-	let isFloating = $state(false);
-	let isMultiline = $derived(inputState.text.split('\n').length > 1);
+	let { isAlertVisible = $bindable(false), isFloating = $bindable(false) } = $props();
 
 	// Refs
 	let fileInput: HTMLInputElement;
