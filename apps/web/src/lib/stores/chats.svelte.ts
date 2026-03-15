@@ -3,8 +3,8 @@ import { API_BASE } from '$lib/constants';
 export type Chat = {
     id: string;
     title: string | null;
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
     pinned: boolean;
 };
 
@@ -60,7 +60,7 @@ class ChatStore {
     appendChat(chat: Chat) {
         const newChat = {
             ...chat,
-            updated_at: chat.updated_at || new Date().toISOString()
+            updated_at: chat.updated_at
         };
         this.chats = [newChat, ...this.chats];
     }
@@ -137,11 +137,6 @@ class ChatStore {
         for (const chat of sortedChats) {
             if (chat.pinned) {
                 groups.pinned.push(chat);
-                continue;
-            }
-
-            if (!chat.updated_at) {
-                groups.older.push(chat);
                 continue;
             }
 
