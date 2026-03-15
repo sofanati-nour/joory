@@ -3,16 +3,26 @@
 	import { messages, loadChat, clearMessages, chatId, isGenerating } from '$lib/stores/chat';
 	import { inputState } from '$lib/stores/input.svelte';
 	import { fly } from 'svelte/transition';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import ChatInput from './ChatInput.svelte';
 	import UserMessage from './UserMessage.svelte';
 	import AssistantMessage from './AssistantMessage.svelte';
 	import type { PageProps } from './$types';
 
 	let { params }: PageProps = $props();
+	let isGuest = $derived(!$page.data?.user);
 	let chatContainer: HTMLElement;
 	let isAlertVisible = $state(false);
 	let shouldSmoothScroll = $state(false);
 	let chatUUID = $state('');
+
+	// Redirect guests trying to access saved chats
+	$effect(() => {
+		if (isGuest && params.id) {
+			goto('/chat', { replaceState: true });
+		}
+	});
 
 	// Enable smooth scrolling after initial mount
 	onMount(() => {

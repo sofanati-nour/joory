@@ -16,7 +16,7 @@ app.use("/*", authMiddleware);
 app.post("/getSubscriptionData", async (c) => {
   const user = c.get("user");
 
-  const usageStatus = await getUsageStatus(user.id, user.tier);
+  const usageStatus = await getUsageStatus(user.id, user.tier as "free" | "pro");
 
   return c.json({
     tier: user.tier,

@@ -4,6 +4,8 @@ import GOOGLE_MODEL_CATALOG from "./models/google";
 // import ANTHROPIC_MODEL_CATALOG from "./models/anthropic";
 // import X_AI_MODEL_CATALOG from "./models/x-ai";
 
+export const GUEST_MODEL_ID = "openrouter/hunter-alpha" as const;
+
 export const MODEL_CATALOG: Model[] = [
     // ...OPEN_AI_MODEL_CATALOG,
     ...GOOGLE_MODEL_CATALOG,

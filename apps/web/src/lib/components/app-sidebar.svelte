@@ -63,6 +63,12 @@
 		</div>
 	</Sidebar.Header>
 	<Sidebar.Content>
+		{#if !user}
+			<div class="mx-3 mt-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-center text-xs text-muted-foreground">
+				<p class="font-medium text-foreground">{$_('nav.guestBanner')}</p>
+				<a href="/auth/login" class="mt-1 inline-block text-primary hover:underline">{$_('common.login')}</a>
+			</div>
+		{/if}
 		{#if chatState.error && chatState.chats.length === 0}
 			<div
 				class="flex flex-col items-center justify-center gap-2 py-8 text-center text-sm text-destructive/60"

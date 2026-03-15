@@ -54,7 +54,7 @@ export const sendMessage = async (
 	content: string,
 	model: string,
 	chatUUID: string,
-	options: { webSearch?: boolean; reasoning?: boolean; files?: ChatFile[] } = {}
+	options: { webSearch?: boolean; reasoning?: boolean; files?: ChatFile[]; isGuest?: boolean; previousMessages?: Array<{ role: string; content: string }> } = {}
 ) => {
 	const errors = validateMessageBeforeSending(content, model, (options.files?.length ?? 0) > 0);
 	if (errors) throw errors[0];
@@ -80,11 +80,12 @@ export const sendMessage = async (
 			body: JSON.stringify({
 				message: content,
 				model,
-				chatId: chatUUID,
+				chatId: options.isGuest ? undefined : chatUUID,
 				webSearch: options.webSearch,
 				reasoning: options.reasoning,
 				imageGeneration: isImageGeneration,
-				files: options.files
+				files: options.files,
+				...(options.isGuest && options.previousMessages ? { previousMessages: options.previousMessages } : {})
 			})
 		});
 
@@ -92,14 +93,17 @@ export const sendMessage = async (
 			const $t = get(t);
 			if (res.status === 401) throw new Error($t('chat.errorUnauthorized'));
 			if (res.status === 429) throw new Error($t('chat.errorRateLimit'));
+			if (res.status === 403) throw new Error('Guests can only use the free model');
 			throw new Error($t('chat.errorGeneric'));
 		}
 
-		const newChatId = res.headers.get('x-chat-id');
-		if (newChatId && chatUUID !== newChatId) {
-			chatId.set(newChatId);
-			chatState.appendChat({ id: newChatId, title: null, pinned: false });
-			goto(`/chat/${newChatId}`, { replaceState: true, invalidateAll: false });
+		if (!options.isGuest) {
+			const newChatId = res.headers.get('x-chat-id');
+			if (newChatId && chatUUID !== newChatId) {
+				chatId.set(newChatId);
+				chatState.appendChat({ id: newChatId, title: null, pinned: false });
+				goto(`/chat/${newChatId}`, { replaceState: true, invalidateAll: false });
+			}
 		}
 
 		// Handle stream — each data line is a JSON-serialised AI SDK fullStream

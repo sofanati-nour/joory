@@ -12,7 +12,8 @@
 		isGenerating,
 		webSearchEnabled,
 		onToggleWebSearch,
-		onAttachFile
+		onAttachFile,
+		isGuest = false
 	}: {
 		model: string;
 		hasContent: boolean;
@@ -20,6 +21,7 @@
 		webSearchEnabled: boolean;
 		onToggleWebSearch: () => void;
 		onAttachFile: () => void;
+		isGuest?: boolean;
 	} = $props();
 
 	// Strip `:reasoning` suffix when looking up model metadata
@@ -51,40 +53,44 @@
 	<!-- Model Selector & Actions -->
 	<div class="flex min-w-0 items-center gap-2">
 		<div class="min-w-0 flex-1">
-			<ModelSelector bind:model />
+			<ModelSelector bind:model {isGuest} />
 		</div>
 
 		<!-- Web Search Toggle -->
-		<div class="shrink-0">
-			<Button
-				aria-label="Web search"
-				type="button"
-				variant="ghost"
-				class="h-8 gap-2 {webSearchEnabled
-					? 'bg-primary/10 text-primary ring-1 ring-primary/20 hover:bg-primary/20'
-					: 'bg-sidebar/60'} rounded-full border px-5 text-xs font-normal hover:bg-sidebar"
-				size="sm"
-				onclick={onToggleWebSearch}
-				disabled={isGenerating}
-			>
-				<SearchIcon class="size-3.5" />
-				<span class="hidden @md:block">{$_('common.search')}</span>
-			</Button>
-		</div>
+		{#if !isGuest}
+			<div class="shrink-0">
+				<Button
+					aria-label="Web search"
+					type="button"
+					variant="ghost"
+					class="h-8 gap-2 {webSearchEnabled
+						? 'bg-primary/10 text-primary ring-1 ring-primary/20 hover:bg-primary/20'
+						: 'bg-sidebar/60'} rounded-full border px-5 text-xs font-normal hover:bg-sidebar"
+					size="sm"
+					onclick={onToggleWebSearch}
+					disabled={isGenerating}
+				>
+					<SearchIcon class="size-3.5" />
+					<span class="hidden @md:block">{$_('common.search')}</span>
+				</Button>
+			</div>
+		{/if}
 
 		<!-- File Attach -->
-		<div class="shrink-0">
-			<Button
-				aria-label="Attach file"
-				type="button"
-				variant="ghost"
-				class="h-8 gap-2 rounded-full border bg-sidebar/60 px-5 text-xs font-normal hover:bg-sidebar"
-				size="sm"
-				onclick={onAttachFile}
-				disabled={isGenerating || !supportsAttachments}
-			>
-				<PaperclipIcon class="size-4" />
-			</Button>
-		</div>
+		{#if !isGuest}
+			<div class="shrink-0">
+				<Button
+					aria-label="Attach file"
+					type="button"
+					variant="ghost"
+					class="h-8 gap-2 rounded-full border bg-sidebar/60 px-5 text-xs font-normal hover:bg-sidebar"
+					size="sm"
+					onclick={onAttachFile}
+					disabled={isGenerating || !supportsAttachments}
+				>
+					<PaperclipIcon class="size-4" />
+				</Button>
+			</div>
+		{/if}
 	</div>
 </div>

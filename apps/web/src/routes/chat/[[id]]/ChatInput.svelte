@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { sendMessage, isGenerating, chatId } from '$lib/stores/chat';
+	import { sendMessage, isGenerating, chatId, messages } from '$lib/stores/chat';
 	import { userState } from '$lib/stores/user.svelte';
 	import { inputState } from '$lib/stores/input.svelte';
-	import { ALLOWED_UPLOADS, MODEL_MAP, type ModelId } from '@app/shared';
+	import { ALLOWED_UPLOADS, MODEL_MAP, GUEST_MODEL_ID, type ModelId } from '@app/shared';
 	import { fileToBase64, getSmartDirection } from '$lib/utils';
 	import { _ } from 'svelte-i18n';
 	import { cubicOut } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
+	import { page } from '$app/stores';
+	import { get } from 'svelte/store';
 
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import LowCreditsAlert from './LowCreditsAlert.svelte';
@@ -15,6 +17,16 @@
 
 	// Props
 	let { isAlertVisible = $bindable(false), isFloating = $bindable(false) } = $props();
+
+	// Guest detection
+	let isGuest = $derived(!$page.data?.user);
+
+	// Force guest model on mount
+	$effect(() => {
+		if (isGuest) {
+			inputState.setModel(GUEST_MODEL_ID as ModelId);
+		}
+	});
 
 	// Refs
 	let fileInput: HTMLInputElement;
@@ -67,15 +79,15 @@
 
 		try {
 			// Parse model for reasoning mode
-			let modelId = inputState.model;
+			let modelId = isGuest ? GUEST_MODEL_ID as ModelId : inputState.model;
 			let reasoning = false;
-			if (modelId.endsWith(':reasoning')) {
+			if (!isGuest && modelId.endsWith(':reasoning')) {
 				modelId = modelId.replace(':reasoning', '') as ModelId;
 				reasoning = true;
 			}
 
-			// Optimistic credit update (1 point = 1 cent)
-			if (userState.usage) {
+			// Optimistic credit update (skip for guests)
+			if (!isGuest && userState.usage) {
 				const estimatedCost = MODEL_MAP[modelId]?.pointCostEstimate ?? 0.5;
 				if (userState.usage.windowRemaining >= estimatedCost) {
 					userState.usage.windowRemaining = Math.max(0, userState.usage.windowRemaining - estimatedCost);
@@ -100,14 +112,23 @@
 			inputState.text = '';
 			inputState.attachedFiles = [];
 
+			// Collect previous messages for guest context
+			const previousMessages = isGuest
+				? get(messages).map((m) => ({ role: m.role, content: m.content }))
+				: undefined;
+
 			await sendMessage(originalText, modelId, $chatId, {
-				webSearch: inputState.webSearchEnabled,
+				webSearch: isGuest ? false : inputState.webSearchEnabled,
 				reasoning,
-				files: filesToSend
+				files: filesToSend,
+				isGuest,
+				previousMessages
 			});
 
-			// Refresh subscription after successful send
-			userState.fetchSubscription().catch(console.error);
+			// Refresh subscription after successful send (skip for guests)
+			if (!isGuest) {
+				userState.fetchSubscription().catch(console.error);
+			}
 		} catch (error) {
 			console.error('Failed to send message:', error);
 
@@ -205,7 +226,9 @@
 		<div class="relative mx-auto flex w-full max-w-3xl flex-col text-center">
 			<div class="pointer-events-auto">
 				<!-- Low Credits Warning -->
-				<LowCreditsAlert {remainingCredits} currentTier="standard" />
+				{#if !isGuest}
+					<LowCreditsAlert {remainingCredits} currentTier="standard" />
+				{/if}
 
 				<!-- File Error Alert -->
 				{#if fileError}
@@ -289,6 +312,7 @@
 							webSearchEnabled={inputState.webSearchEnabled}
 							onToggleWebSearch={toggleWebSearch}
 							onAttachFile={triggerFileInput}
+							{isGuest}
 						/>
 					</form>
 				</div>

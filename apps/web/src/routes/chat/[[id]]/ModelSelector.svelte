@@ -20,7 +20,7 @@
 	import { _ } from 'svelte-i18n';
 	import { localeStore } from '$lib/stores/locale.svelte';
 
-	let { model = $bindable() } = $props();
+	let { model = $bindable(), isGuest = false }: { model: string; isGuest?: boolean } = $props();
 
 	let searchModel = $state('');
 	let selectedProvider = $state('all');
@@ -46,6 +46,21 @@
 	];
 </script>
 
+{#if isGuest}
+	<Button
+		variant="ghost"
+		class="h-8 gap-2 border bg-sidebar/60 px-3 text-xs font-medium"
+		size="sm"
+		disabled
+	>
+		<div class="min-w-0">
+			<div class="truncate font-normal">Hunter Alpha</div>
+		</div>
+		<a href="/auth/login" class="text-[10px] text-primary hover:underline" onclick={(e) => e.stopPropagation()}>
+			{$_('common.login')}
+		</a>
+	</Button>
+{:else}
 <Popover.Root bind:open={isPopoverOpen}>
 	<Popover.Trigger role="combobox" aria-label="Select model">
 		<Button
@@ -248,3 +263,4 @@
 		</div>
 	</Popover.Content>
 </Popover.Root>
+{/if}

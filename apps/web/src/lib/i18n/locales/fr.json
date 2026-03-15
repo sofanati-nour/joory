@@ -46,7 +46,8 @@
 		"pin": "Épingler",
 		"unpin": "Désépingler",
 		"paidSubscription": "Abonnement payant",
-		"freeSubscription": "Abonnement gratuit"
+		"freeSubscription": "Abonnement gratuit",
+		"guestBanner": "Essayez Joory gratuitement — connectez-vous pour sauvegarder vos conversations"
 	},
 	"settings": {
 		"title": "Paramètres",

@@ -60,8 +60,6 @@ Model constants in `packages/shared/src/constants/models.ts` define the full `MO
 - **Auth:** Better Auth 1.4.18 client-side integration.
 - **Svelte 5 experimental async** is enabled in `svelte.config.js`.
 
-Allowed dev hosts: `chat.syrian.test`, `joory.test` (configured in `vite.config.ts`).
-
 ### `@app/api` — Hono Backend (early scaffold)
 
 The API is currently a scaffold. The intended structure (from `structure.md`) is:

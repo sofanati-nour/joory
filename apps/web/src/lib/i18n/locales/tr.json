@@ -46,7 +46,8 @@
 		"pin": "Sabitle",
 		"unpin": "Sabitlemeyi Kaldır",
 		"paidSubscription": "Ücretli Abonelik",
-		"freeSubscription": "Ücretsiz Abonelik"
+		"freeSubscription": "Ücretsiz Abonelik",
+		"guestBanner": "Joory'yi ücretsiz deneyin — sohbetleri kaydetmek için giriş yapın"
 	},
 	"settings": {
 		"title": "Ayarlar",

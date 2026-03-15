@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import { authMiddleware, type UserWithTier } from "../middleware/auth";
+import { authMiddleware, optionalAuthMiddleware, type UserWithTier } from "../middleware/auth";
 import { logger } from "../lib/logger";
 import { db } from "../db";
 import { conversations } from "../db/schema";
@@ -9,7 +9,7 @@ import { openrouter } from "../lib/openrouter";
 import { streamText } from "ai";
 import { checkAndDeduct, settleUsage, getActualCostCents } from "../lib/rateLimiter";
 import type { ChatStreamEvent } from "@app/shared";
-import { MODEL_MAP } from "@app/shared";
+import { MODEL_MAP, GUEST_MODEL_ID } from "@app/shared";
 import { isValidUUID } from "../lib/validation";
 import { getMessageHistory } from "../lib/messageHistory";
 import { resolveConversation } from "../lib/conversationResolver";
@@ -17,6 +17,7 @@ import { generateTitle } from "../lib/titleGenerator";
 import { insertUserMessage, insertAssistantMessage } from "../lib/messageInserter";
 import { buildChatMessages } from "../lib/chatMessages";
 import { CHAT_TOOLS } from "../tools";
+import { checkGuestRateLimit } from "../lib/guestRateLimiter";
 
 type Env = {
   Variables: {
@@ -29,10 +30,8 @@ const MAX_OUTPUT_TOKENS_CAP = 16_384;
 
 const app = new Hono<Env>();
 
-app.use("/*", authMiddleware);
-
 // ─── POST /  — send a message and stream the assistant reply ────────────────
-app.post("/", async (c) => {
+app.post("/", optionalAuthMiddleware, async (c) => {
   const user = c.get("user");
 
   logger.info("chat_request_received", { userId: user.id, tier: user.tier });
@@ -75,6 +74,73 @@ app.post("/", async (c) => {
     return c.json({ error: "Unsupported model" }, 400);
   }
 
+  // ─── Guest branch ─────────────────────────────────────────────────────────
+  if (user.tier === "guest") {
+    if (model !== GUEST_MODEL_ID) {
+      return c.json({ error: "Guests can only use the free model" }, 403);
+    }
+
+    if (systemPrompt) {
+      return c.json({ error: "System prompts are not available for guests" }, 400);
+    }
+
+    const rateCheck = checkGuestRateLimit(user.id);
+    if (!rateCheck.allowed) {
+      c.header("Retry-After", String(Math.ceil(rateCheck.retryAfterMs / 1000)));
+      return c.json({
+        error: {
+          code: "guest_rate_limit",
+          message: "Guest rate limit reached. Sign in for unlimited access.",
+          retryAfterMs: rateCheck.retryAfterMs,
+        },
+      }, 429);
+    }
+
+    // Build messages from previousMessages in body
+    const rawPrevious = Array.isArray(body.previousMessages) ? body.previousMessages as { role: string; content: string }[] : [];
+    const previousMessages = rawPrevious
+      .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.length <= 10_000)
+      .slice(-20);
+
+    const llmMessages: Array<{ role: "user" | "assistant"; content: string }> = [
+      ...previousMessages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+      { role: "user" as const, content: message },
+    ];
+
+    const modelMeta = MODEL_MAP[model];
+    const maxTokens = Math.min(modelMeta.maxOutput ?? MAX_OUTPUT_TOKENS_CAP, MAX_OUTPUT_TOKENS_CAP);
+
+    const send = (stream: Parameters<Parameters<typeof streamSSE>[1]>[0], event: ChatStreamEvent) =>
+      stream.writeSSE({ data: JSON.stringify(event) });
+
+    return streamSSE(c, async (stream) => {
+      try {
+        const { fullStream } = streamText({
+          model: openrouter(model),
+          messages: llmMessages,
+          maxTokens,
+          ...(modelMeta.supportsTools && { tools: CHAT_TOOLS, maxSteps: 5 }),
+        });
+
+        let fullContent = "";
+        for await (const part of fullStream) {
+          await stream.writeSSE({ data: JSON.stringify(part) });
+          if (part.type === "text-delta") {
+            fullContent += part.textDelta;
+          }
+        }
+
+        await send(stream, { type: "finish", finishReason: "stop" });
+      } catch (error) {
+        logger.error("guest_chat_stream_error", error, { guestId: user.id });
+        await send(stream, { type: "error", message: "An error occurred while processing your request" });
+      } finally {
+        await stream.close();
+      }
+    });
+  }
+
+  // ─── Authenticated branch (unchanged) ─────────────────────────────────────
   const modelMeta = MODEL_MAP[model];
   logger.debug("chat_model_resolved", { userId: user.id, model, supportsTools: modelMeta.supportsTools, maxOutput: modelMeta.maxOutput });
 
@@ -82,7 +148,7 @@ app.post("/", async (c) => {
   logger.debug("chat_rate_limit_checking", { userId: user.id, tier: user.tier, model });
   let rateLimitResult: Awaited<ReturnType<typeof checkAndDeduct>>;
   try {
-    rateLimitResult = await checkAndDeduct(user.id, user.tier, model);
+    rateLimitResult = await checkAndDeduct(user.id, user.tier as "free" | "pro", model);
   } catch (err) {
     logger.error("chat_rate_limit_error", err, { userId: user.id, model });
     return c.json({ error: "Internal server error" }, 500);
@@ -340,7 +406,7 @@ app.post("/", async (c) => {
 });
 
 // ─── GET /:id  — load conversation messages ─────────────────────────────────
-app.get("/:id", async (c) => {
+app.get("/:id", authMiddleware, async (c) => {
   const user = c.get("user");
   const conversationId = c.req.param("id");
 

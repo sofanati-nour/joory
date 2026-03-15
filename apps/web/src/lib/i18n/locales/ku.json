@@ -46,7 +46,8 @@
 		"pin": "Bigire",
 		"unpin": "Veke",
 		"paidSubscription": "Abonetiya dravdar",
-		"freeSubscription": "Abonetiya belaş"
+		"freeSubscription": "Abonetiya belaş",
+		"guestBanner": "جۆری بەخۆڕایی تاقی بکەوە — بچۆ ژوورەوە بۆ پاشەکەوتکردنی گفتوگۆکان"
 	},
 	"settings": {
 		"title": "Sazkarî",

@@ -46,7 +46,8 @@
 		"pin": "Pin",
 		"unpin": "Unpin",
 		"paidSubscription": "Paid Subscription",
-		"freeSubscription": "Free Subscription"
+		"freeSubscription": "Free Subscription",
+		"guestBanner": "Try Joory free — sign in to save chats"
 	},
 	"settings": {
 		"title": "Settings",

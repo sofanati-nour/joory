@@ -16,7 +16,9 @@
 	let sidebarOpen = $state(true);
 
 	onMount(() => {
-		userState.fetchSubscription();
+		if (user) {
+			userState.fetchSubscription();
+		}
 	});
 </script>
 

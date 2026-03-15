@@ -46,7 +46,8 @@
 		"pin": "تثبيت",
 		"unpin": "إلغاء التثبيت",
 		"paidSubscription": "اشتراك مدفوع",
-		"freeSubscription": "اشتراك مجاني"
+		"freeSubscription": "اشتراك مجاني",
+		"guestBanner": "جرّب جوري مجاناً — سجّل الدخول لحفظ المحادثات"
 	},
 	"settings": {
 		"title": "الإعدادات",
