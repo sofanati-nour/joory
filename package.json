@@ -6,10 +6,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "check": "turbo check"
+    "dev": "bun ./node_modules/.bin/turbo dev",
+    "build": "bun ./node_modules/.bin/turbo build",
+    "lint": "bun ./node_modules/.bin/turbo lint",
+    "check": "bun ./node_modules/.bin/turbo check"
+  },
+  "engines": {
+    "bun": "1.3.9",
+    "node": ">=20.19 <21 || >=22.12"
   },
   "devDependencies": {
     "turbo": "^2.8.17"

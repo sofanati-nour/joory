@@ -2,10 +2,10 @@
   "name": "@app/api",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
+    "db:generate": "bun ./node_modules/.bin/drizzle-kit generate",
+    "db:migrate": "bun ./node_modules/.bin/drizzle-kit migrate",
+    "db:push": "bun ./node_modules/.bin/drizzle-kit push",
+    "db:studio": "bun ./node_modules/.bin/drizzle-kit studio",
     "cleanup:empty-chats": "bun run src/scripts/cleanup-empty-chats.ts",
     "cleanup:empty-chats:dry": "bun run src/scripts/cleanup-empty-chats.ts --dry-run"
   },

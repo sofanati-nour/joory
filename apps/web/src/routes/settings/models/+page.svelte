@@ -71,7 +71,9 @@
 						</div>
 						<div class="flex flex-col gap-0.5">
 							<span class="text-muted-foreground text-xs">{$_('models.contextLength')}</span>
-							<span class="font-medium">{(model.contextWindow / 1024).toFixed(0)}k tokens</span>
+							<span class="font-medium">
+								{model.contextWindow ? `${(model.contextWindow / 1024).toFixed(0)}k tokens` : 'N/A'}
+							</span>
 						</div>
 						<div class="col-span-2 flex flex-col gap-0.5 mt-2">
 							<span class="text-muted-foreground text-xs">{$_('models.capabilities')}</span>

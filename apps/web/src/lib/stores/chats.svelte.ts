@@ -3,6 +3,7 @@ import { API_BASE } from '$lib/constants';
 export type Chat = {
     id: string;
     title: string | null;
+    created_at?: string;
     updated_at?: string;
     pinned: boolean;
 };
